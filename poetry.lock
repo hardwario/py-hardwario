@@ -1,0 +1,90 @@
+[[package]]
+name = "click"
+version = "8.0.3"
+description = "Composable command line interface toolkit"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[[package]]
+name = "colorama"
+version = "0.4.4"
+description = "Cross-platform colored terminal text."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[[package]]
+name = "future"
+version = "0.18.2"
+description = "Clean single-source support for Python 3 and 2"
+category = "main"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
+name = "hardwario-chester"
+version = "1.3.0"
+description = "HARDWARIO CHESTER"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+click = ">=8.0.3,<9.0.0"
+hardwario-common = ">=1.3.0,<2.0.0"
+pynrfjprog = ">=10.15.2,<11.0.0"
+
+[[package]]
+name = "hardwario-common"
+version = "1.3.0"
+description = "HARDWARIO Common"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+click = ">=8.0.3,<9.0.0"
+
+[[package]]
+name = "pynrfjprog"
+version = "10.15.2"
+description = "A simple Python interface for the nrfjprog functionality"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+future = "*"
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.9"
+content-hash = "8e5d9f066bc55951daa9ab019153b061896ab4d2bacf2a6f98252dae5624a674"
+
+[metadata.files]
+click = [
+    {file = "click-8.0.3-py3-none-any.whl", hash = "sha256:353f466495adaeb40b6b5f592f9f91cb22372351c84caeb068132442a4518ef3"},
+    {file = "click-8.0.3.tar.gz", hash = "sha256:410e932b050f5eed773c4cda94de75971c89cdb3155a72a0831139a79e5ecb5b"},
+]
+colorama = [
+    {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
+    {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
+]
+future = [
+    {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
+]
+hardwario-chester = [
+    {file = "hardwario-chester-1.3.0.tar.gz", hash = "sha256:e594be01c63399e8a78b60f6a9b7b58eb229017169f2e1bc033dafd62415ecf6"},
+    {file = "hardwario_chester-1.3.0-py3-none-any.whl", hash = "sha256:1f2be27452d29a916b06b9db173a7fb6add1b98119bf02a81675038d52af5417"},
+]
+hardwario-common = [
+    {file = "hardwario-common-1.3.0.tar.gz", hash = "sha256:2b2dd43294bfba4370ba3fabcd8830e7d67cccdbe3ddcdab75baa9ae0744275b"},
+    {file = "hardwario_common-1.3.0-py3-none-any.whl", hash = "sha256:53301d8334ae8c692bb27874280d8f8507f2420be80604a845b64726ea01d9bf"},
+]
+pynrfjprog = [
+    {file = "pynrfjprog-10.15.2.zip", hash = "sha256:8dfff9c8f6fe8c33fcdbae099441984da30a55bc6b8682d4281a2df73625524b"},
+]
