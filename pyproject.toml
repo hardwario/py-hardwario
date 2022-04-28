@@ -37,8 +37,8 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.6.2"
-hardwario-chester = ">=1.8.4"
-hardwario-cloud = ">=1.2.0"
+hardwario-chester = ">=1.8.5"
+hardwario-cloud = ">=1.2.1"
 
 [tool.poetry.dev-dependencies]
 #hardwario-common = {path = "../py-hardwario-common", develop = true}

@@ -86,7 +86,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "hardwario-chester"
-version = "1.8.4"
+version = "1.8.5"
 description = "HARDWARIO CHESTER"
 category = "main"
 optional = false
@@ -95,7 +95,7 @@ python-versions = ">=3.6.2"
 [package.dependencies]
 click = ">=8.0.3,<9.0.0"
 docker = ">=5.0.3,<6.0.0"
-hardwario-common = ">=1.6.0,<2.0.0"
+hardwario-common = ">=1.6.1,<2.0.0"
 loguru = ">=0.6.0,<0.7.0"
 prompt-toolkit = ">=3.0.28,<4.0.0"
 pylink-square = ">=0.12.0,<0.13.0"
@@ -104,7 +104,7 @@ pyperclip = ">=1.8.2,<2.0.0"
 
 [[package]]
 name = "hardwario-cloud"
-version = "1.2.0"
+version = "1.2.1"
 description = "HARDWARIO CLOUD"
 category = "main"
 optional = false
@@ -112,14 +112,14 @@ python-versions = ">=3.6"
 
 [package.dependencies]
 click = ">=8.0.3,<9.0.0"
-hardwario-common = ">=1.6.0,<2.0.0"
+hardwario-common = ">=1.6.1,<2.0.0"
 loguru = ">=0.6.0,<0.7.0"
 PyYAML = ">=5.1,<6.0"
 requests = ">=2.27.1,<3.0.0"
 
 [[package]]
 name = "hardwario-common"
-version = "1.6.0"
+version = "1.6.1"
 description = "HARDWARIO Common"
 category = "main"
 optional = false
@@ -355,7 +355,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.2"
-content-hash = "adfd6a3af1489bd3d09af801ae11ec185350672e59376b1a1b928fef2e267fbc"
+content-hash = "20d69045b021c11e62dc12902cfb142e34b8d3ae03a19f54eb5bbfade4bc12f5"
 
 [metadata.files]
 aiocontextvars = [
@@ -389,16 +389,16 @@ future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
 hardwario-chester = [
-    {file = "hardwario-chester-1.8.4.tar.gz", hash = "sha256:83defad7cee8a43aad47f471aa7c3977a32a83fe7a44f20a2aea9824c2cad763"},
-    {file = "hardwario_chester-1.8.4-py3-none-any.whl", hash = "sha256:90c1bffb0577d328ec27d4ded213ce09b666e9693240375ff0a966039fe08e71"},
+    {file = "hardwario-chester-1.8.5.tar.gz", hash = "sha256:8d853c11586ec5aca23af2050e3f7fc1b5aa545c2a2c45559bea82d829357b16"},
+    {file = "hardwario_chester-1.8.5-py3-none-any.whl", hash = "sha256:aa28df252d4d75c49f084ea5be2096c7f62cd7b2e9aaa8fa2c206b78e8decfa7"},
 ]
 hardwario-cloud = [
-    {file = "hardwario-cloud-1.2.0.tar.gz", hash = "sha256:92d254a162049fc5c0f5f2b42bdb1b6826caf7cc11153050cc5378255bf37265"},
-    {file = "hardwario_cloud-1.2.0-py3-none-any.whl", hash = "sha256:ce5b6cc6d8fc01bfb046425c0ab79bcbd5d13e24b148ce74d8073cd958a2f913"},
+    {file = "hardwario-cloud-1.2.1.tar.gz", hash = "sha256:a2eaa34d23642a409fbbdf5cc01a08b5236eb2823879099bfabcf2022e853329"},
+    {file = "hardwario_cloud-1.2.1-py3-none-any.whl", hash = "sha256:c6c03364c8d0d1b2f0f92a0e84cea67489a0aa13b06b58589de92690551798dc"},
 ]
 hardwario-common = [
-    {file = "hardwario-common-1.6.0.tar.gz", hash = "sha256:864852d62c3d6f5f8a1cbbbd05e86f164380a9b2d546ba72f97bf79b604a9e4d"},
-    {file = "hardwario_common-1.6.0-py3-none-any.whl", hash = "sha256:c6b34c4ad4c9df954b31a513294d7d48f566f08d989add477a6a9c6e997ab2ff"},
+    {file = "hardwario-common-1.6.1.tar.gz", hash = "sha256:8437c1e78395c484993b805096f4baf95e2cecf02e479fdc4e1ef2ac9d4de301"},
+    {file = "hardwario_common-1.6.1-py3-none-any.whl", hash = "sha256:8c97ae18fb77d136e6e7282d5aadfcb34e85f403d9ba1a7d1cf3e3be0d75390b"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
