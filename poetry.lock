@@ -86,7 +86,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "hardwario-chester"
-version = "1.8.5"
+version = "1.9.0"
 description = "HARDWARIO CHESTER"
 category = "main"
 optional = false
@@ -104,7 +104,7 @@ pyperclip = ">=1.8.2,<2.0.0"
 
 [[package]]
 name = "hardwario-cloud"
-version = "1.2.1"
+version = "1.3.0"
 description = "HARDWARIO CLOUD"
 category = "main"
 optional = false
@@ -355,7 +355,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.2"
-content-hash = "20d69045b021c11e62dc12902cfb142e34b8d3ae03a19f54eb5bbfade4bc12f5"
+content-hash = "2c1736d3bffe336163c995a8ccbee0c71fd1af6bb0d139a375bd89e4660d6770"
 
 [metadata.files]
 aiocontextvars = [
@@ -389,12 +389,12 @@ future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
 hardwario-chester = [
-    {file = "hardwario-chester-1.8.5.tar.gz", hash = "sha256:8d853c11586ec5aca23af2050e3f7fc1b5aa545c2a2c45559bea82d829357b16"},
-    {file = "hardwario_chester-1.8.5-py3-none-any.whl", hash = "sha256:aa28df252d4d75c49f084ea5be2096c7f62cd7b2e9aaa8fa2c206b78e8decfa7"},
+    {file = "hardwario-chester-1.9.0.tar.gz", hash = "sha256:7da63ae2ee4fd2caf26d6217d5d6d237cb8c157ab6e80d371e048db530c103ef"},
+    {file = "hardwario_chester-1.9.0-py3-none-any.whl", hash = "sha256:127fe3b979f2bb279e1e1a854fb97c6a1f7380a34532d7c1bbe6afb63380e14d"},
 ]
 hardwario-cloud = [
-    {file = "hardwario-cloud-1.2.1.tar.gz", hash = "sha256:a2eaa34d23642a409fbbdf5cc01a08b5236eb2823879099bfabcf2022e853329"},
-    {file = "hardwario_cloud-1.2.1-py3-none-any.whl", hash = "sha256:c6c03364c8d0d1b2f0f92a0e84cea67489a0aa13b06b58589de92690551798dc"},
+    {file = "hardwario-cloud-1.3.0.tar.gz", hash = "sha256:88d8e7df2f22f8853a5999b153d87fa5938bccf1311344b6325a44fee701cd8b"},
+    {file = "hardwario_cloud-1.3.0-py3-none-any.whl", hash = "sha256:9d29c7e4b53d77b362381f0cbff37bc57832a39ff69c3b19a4408ee1b56a9711"},
 ]
 hardwario-common = [
     {file = "hardwario-common-1.6.1.tar.gz", hash = "sha256:8437c1e78395c484993b805096f4baf95e2cecf02e479fdc4e1ef2ac9d4de301"},
