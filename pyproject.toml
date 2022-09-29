@@ -37,7 +37,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.7, <4"
-hardwario-chester = ">=1.21.0"
+hardwario-chester = ">=1.22.0"
 hardwario-cloud = ">=1.4.2"
 
 [tool.poetry.dev-dependencies]
