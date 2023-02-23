@@ -37,15 +37,15 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.7, <4"
-hardwario-chester = ">=v1.24.0"
-hardwario-cloud = ">=1.4.2"
+hardwario-chester = ">=v1.25.0"
+hardwario-cloud = ">=1.5.0"
 
 [tool.poetry.dev-dependencies]
 #hardwario-common = {path = "../py-hardwario-common", develop = true}
 #hardwario-chester = {path = "../py-hardwario-chester", develop = true}
 #hardwario-cloud = {path = "../py-hardwario-cloud", develop = true}
 #hardwario-tower = {path = "../py-hardwario-tower", develop = true}
-pycodestyle = "^2.9.1"
+pycodestyle = "^2.10.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
