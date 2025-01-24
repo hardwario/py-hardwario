@@ -73,8 +73,9 @@ def nrf_console(cli: click.Group, family):
     @click.option('--latency', type=int, help='Latency for RTT readout in ms.', show_default=True, default=50)
     @click.option('--history-file', type=click.Path(writable=True), show_default=True, default=default_history_file)
     @click.option('--console-file', type=click.Path(writable=True), show_default=True, default=default_console_file)
+    @click.option('--device', type=str, help='J-Link device name.', default=None)
     @click.pass_context
-    def command_console(ctx, reset, latency, history_file, console_file):
+    def command_console(ctx, reset, latency, history_file, console_file, device):
         '''Start interactive console for shell and logging.'''
 
         with ctx.obj['prog'] as prog:
@@ -85,9 +86,10 @@ def nrf_console(cli: click.Group, family):
             device_info = prog.read_device_info()
             logger.info(f'device info: {device_info}')
 
-            device_version = device_info[0].name
-            end = device_version.rfind('_')
-            chip_name = device_version[:end]
+            if not device:
+                device_version = device_info[0].name
+                end = device_version.rfind('_')
+                device = device_version[:end]
 
         prog = ctx.obj['prog']
 
@@ -95,7 +97,7 @@ def nrf_console(cli: click.Group, family):
         jlink.open(serial_no=prog.get_serial_number())
         jlink.set_speed(prog.get_speed())
         jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
-        jlink.connect(chip_name)
+        jlink.connect(device)
 
         connector = PyLinkRTTConnector(jlink, latency=latency)
 

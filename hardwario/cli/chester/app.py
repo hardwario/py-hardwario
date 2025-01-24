@@ -19,8 +19,8 @@ default_console_file = os.path.expanduser("~/.chester_console")
 
 
 @click.group(name='app')
-@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-@click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=2000, show_default=True)
+@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+@click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=2000, show_default=True)
 @click.option('--nrfjprog-log', is_flag=True, help='Enable nrfjprog log.')
 @click.pass_context
 def cli(ctx, jlink_sn, jlink_speed, nrfjprog_log):
@@ -30,8 +30,8 @@ def cli(ctx, jlink_sn, jlink_speed, nrfjprog_log):
 
 @cli.command('flash')
 @click.option('--halt', is_flag=True, help='Halt program.')
-@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-@click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+@click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
 @click.argument('hex_file', metavar='HEX_FILE_OR_ID', callback=validate_hex_file, default=find_hex('.', no_exception=True))
 @click.pass_context
 def command_flash(ctx, halt, jlink_sn, jlink_speed, hex_file):
@@ -55,8 +55,8 @@ def command_flash(ctx, halt, jlink_sn, jlink_speed, hex_file):
 
 @cli.command('erase')
 @click.option('--all', is_flag=True, help='Erase application firmware incl. UICR area.')
-@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-@click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+@click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
 @click.pass_context
 def command_erase(ctx, all, jlink_sn, jlink_speed):
     '''Erase application firmware w/o UICR area.'''
@@ -72,8 +72,8 @@ def command_erase(ctx, all, jlink_sn, jlink_speed):
 
 @cli.command('reset')
 @click.option('--halt', is_flag=True, help='Halt program.')
-@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-@click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+@click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
 @click.pass_context
 def command_reset(ctx, halt, jlink_sn, jlink_speed):
     '''Reset application firmware.'''
@@ -126,8 +126,8 @@ def command_console(ctx, reset, latency, history_file, console_file, jlink_sn, j
 
 
 @cli.group(name='pib')
-@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-@click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+@click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
 @click.pass_context
 def group_pib(ctx, jlink_sn, jlink_speed):
     '''HARDWARIO Product Information Block.'''
@@ -186,8 +186,8 @@ def command_pib_write(ctx, vendor_name, product_name, hw_variant, hw_revision, s
 
 
 @cli.group(name='uicr')
-@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-@click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+@click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+@click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
 @click.pass_context
 def group_uicr(ctx, jlink_sn, jlink_speed):
     '''UICR flash area.'''

@@ -11,8 +11,8 @@ def cli(ctx):
 
 def create_group(family: str):
     @cli.group(name=family.lower(), help=f'Commands for {family} devices.')
-    @click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='JLink serial number')
-    @click.option('--jlink-speed', type=int, metavar="SPEED", help='JLink clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+    @click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+    @click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
     @click.pass_context
     def group(ctx, jlink_sn, jlink_speed):
         ctx.obj['prog'] = NRFJProg(family, jlink_sn=jlink_sn, jlink_speed=jlink_speed)
