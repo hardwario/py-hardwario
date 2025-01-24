@@ -85,10 +85,9 @@ def nrf_console(cli: click.Group, family):
             device_info = prog.read_device_info()
             logger.info(f'device info: {device_info}')
 
-            device_version = str(device_info[0])
-
+            device_version = device_info[0].name
             end = device_version.rfind('_')
-            chip_name = device_version[len('DeviceVersion.'):end]
+            chip_name = device_version[:end]
 
         prog = ctx.obj['prog']
 
