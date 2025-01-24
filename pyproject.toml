@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hardwario"
-version = "1.0.0"
+version = "2.0.0"
 description = "HARDWARIO Command Line Tool"
 authors = ["Karel Blavka <karel.blavka@hardwario.com>"]
 license = "MIT"
@@ -25,12 +25,17 @@ classifiers = [
     "Environment :: Console"
 ]
 
+packages = [
+    { include = "hardwario" },
+]
+
+
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
 pycodestyle = "^2.12.1"
 
 [tool.poetry.dev-dependencies]
-pycodestyle = "^2.10.0"
+pycodestyle = "^2.12.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
