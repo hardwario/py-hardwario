@@ -3,6 +3,7 @@ import sys
 import click
 from loguru import logger
 import hardwario
+from hardwario.cli import chester
 
 DEFAULT_LOG_LEVEL = 'DEBUG'
 DEFAULT_LOG_FILE = os.path.expanduser("~/.hardwario/cli.log")
@@ -17,6 +18,9 @@ os.makedirs(os.path.expanduser("~/.hardwario"), exist_ok=True)
 def cli(log_level):
     '''HARDWARIO Command Line Tool.'''
     logger.add(sys.stderr, level=log_level.upper())
+
+
+cli.add_command(chester.cli)
 
 
 def main():
@@ -38,6 +42,7 @@ def main():
     except KeyboardInterrupt:
         pass
     except Exception as e:
+        # raise e
         click.secho(str(e), err=True, fg='red')
         if os.getenv('DEBUG', False):
             raise e
