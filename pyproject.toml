@@ -29,9 +29,13 @@ packages = [
     { include = "hardwario" },
 ]
 
+[tool.poetry.scripts]
+hardwario = "hardwario.cli:main"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
+click = "^8.1.8"
+loguru = "^0.7.3"
 pycodestyle = "^2.12.1"
 
 [tool.poetry.dev-dependencies]
