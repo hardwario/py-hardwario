@@ -1,6 +1,7 @@
 import os
 import pylink
 import click
+from loguru import logger
 from hardwario.cli.console import Console
 from hardwario.cli.console.connector import FileLogConnector
 from hardwario.cli.chester.validate import validate_hex_file
@@ -81,9 +82,15 @@ def nrf_console(cli: click.Group, family):
                 prog.reset()
                 prog.go()
 
-            device_version = str(prog.read_device_info()[0])
+            device_info = prog.read_device_info()
+            logger.info(f'device info: {device_info}')
+
+            device_version = str(device_info[0])
+
             end = device_version.rfind('_')
             chip_name = device_version[len('DeviceVersion.'):end]
+
+        prog = ctx.obj['prog']
 
         jlink = pylink.JLink()
         jlink.open(serial_no=prog.get_serial_number())
@@ -95,6 +102,8 @@ def nrf_console(cli: click.Group, family):
 
         if console_file:
             connector = FileLogConnector(connector, console_file)
+
+        logger.remove(2)  # Remove stderr logger
 
         console = Console(connector, history_file=history_file)
         console.run()
