@@ -40,6 +40,7 @@ prompt-toolkit = "^3.0.48"
 pynrfjprog = "^10.24.2"
 pyperclip = "^1.9.0"
 pylink-square = "^1.4.0"
+paho-mqtt = "^2.1.0"
 requests = "^2.32.3"
 
 [tool.poetry.dev-dependencies]
