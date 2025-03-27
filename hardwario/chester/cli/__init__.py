@@ -1,5 +1,5 @@
 import click
-from hardwario.cli.chester import app, lte
+from hardwario.chester.cli import app, lte
 
 
 @click.group(name='chester', help='Commands for CHESTER (configurable IoT gateway).')

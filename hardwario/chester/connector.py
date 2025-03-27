@@ -4,25 +4,25 @@ import pylink
 import time
 import threading
 from loguru import logger
-from hardwario.cli.console.connector import EventType, Connector
+from rttt.connectors.base import Connector
+from rttt.event import Event, EventType
 
 
 class PyLinkRTTConnector(Connector):
 
     def __init__(self, jlink: pylink.JLink, block_address=None, latency=50) -> None:
+        super().__init__()
         self.jlink = jlink
         self.block_address = block_address
         self.rtt_read_delay = latency / 1000.0
         self.is_running = False
-        self.terminal_up_index = 0
-        self.terminal_up_size = 0
-        self.terminal_down_index = 0
-        self.terminal_down_size = 0
-        self.logger_up_index = None
-        self.logger_up_size = 0
+        self.terminal_buffer = 0
+        self.terminal_buffer_up_size = 0
+        self.terminal_buffer_down_size = 0
+        self.logger_buffer = None
+        self.logger_buffer_up_size = 0
 
-    def open(self, emit_event: Callable[[EventType, str], None]):
-        self.emit_event = emit_event
+    def open(self):
         self._cache = {0: '', 1: ''}
 
         logger.info(f"Opening RTT{' control block found at 0x{:08X}'.format(self.block_address) if self.block_address else ''}")
@@ -48,27 +48,29 @@ class PyLinkRTTConnector(Connector):
             desc = self.jlink.rtt_get_buf_descriptor(i, 1)
             logger.info(f'Up buffer {i}: {desc}')
             if desc.name == 'Terminal':
-                self.terminal_up_index = i
-                self.terminal_up_size = desc.SizeOfBuffer
+                self.terminal_buffer = i
+                self.terminal_buffer_up_size = desc.SizeOfBuffer
             elif desc.name == 'Logger':
-                self.logger_up_index = i
-                self.logger_up_size = desc.SizeOfBuffer
+                self.logger_buffer = i
+                self.logger_buffer_up_size = desc.SizeOfBuffer
 
         for i in range(num_down):
             desc = self.jlink.rtt_get_buf_descriptor(i, 0)
             logger.info(f'Down buffer {i}: {desc}')
             if desc.name == 'Terminal':
-                self.terminal_down_index = i
-                self.terminal_down_size = desc.SizeOfBuffer
+                self.terminal_buffer = i
+                self.terminal_buffer_down_size = desc.SizeOfBuffer
                 break
 
-        self.old_mode = True
-        if self.logger_up_index is None:
-            self.old_mode = True
+        self.old_format = True
+        if self.logger_buffer is None:
+            self.old_format = True
             logger.info('Using old RTT implementation')
 
         self.thread = threading.Thread(target=self._read_task, daemon=True)
         self.thread.start()
+
+        self._emit(Event(EventType.OPEN, ''))
         logger.info('RTT opened')
 
     def close(self):
@@ -78,21 +80,24 @@ class PyLinkRTTConnector(Connector):
         self.is_running = False
         self.thread.join()
         self.jlink.rtt_stop()
+        self._emit(Event(EventType.CLOSE, ''))
         logger.info('RTT closed')
 
-    def input(self, line: str):
-        data = bytearray(f'{line}\n', "utf-8")
-        for i in range(0, len(data), self.terminal_down_size):
-            chunk = data[i:i + self.terminal_down_size]
-            self.jlink.rtt_write(self.terminal_down_index, list(chunk))
-
-        self.emit_event(EventType.TERMINAL_IN, line)
+    def handle(self, event: Event):
+        logger.info(f'handle: {event.type} {event.data}')
+        if event.type == EventType.IN:
+            logger.info(f'RTT write shell buffer {self.terminal_buffer} bufer size {self.terminal_buffer_down_size}')
+            data = bytearray(f'{event.data}\n', "utf-8")
+            for i in range(0, len(data), self.terminal_buffer_down_size):
+                chunk = data[i:i + self.terminal_buffer_down_size]
+                self.jlink.rtt_write(self.terminal_buffer, list(chunk))
+        self._emit(event)
 
     def _read_task(self):
         while self.is_running:
             channels = [
-                (self.terminal_up_index, min(1000, self.terminal_up_size), EventType.TERMINAL_OUT),
-                (self.logger_up_index, min(1000, self.logger_up_size), EventType.LOGGER_OUT)
+                (self.terminal_buffer, min(1000, self.terminal_buffer_up_size), EventType.OUT),
+                (self.logger_buffer, min(1000, self.logger_buffer_up_size), EventType.LOG)
             ]
             for idx, num_bytes, event_type in channels:
                 if idx is None:
@@ -116,9 +121,9 @@ class PyLinkRTTConnector(Connector):
                             if line.endswith('\r'):
                                 line = line[:-1]
 
-                            if self.old_mode and line.startswith('#'):
-                                self.emit_event(EventType.LOGGER_OUT, line)
+                            if self.old_format and line.startswith('#'):
+                                self._emit(Event(EventType.LOG, line))
                             else:
-                                self.emit_event(event_type, line)
+                                self._emit(Event(event_type, line))
 
             time.sleep(self.rtt_read_delay)

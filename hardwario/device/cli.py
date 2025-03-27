@@ -1,15 +1,27 @@
 import os
 import pylink
 import click
+import string
 from loguru import logger
-from hardwario.cli.console import Console
-from hardwario.cli.console.connector import FileLogConnector
-from hardwario.cli.chester.validate import validate_hex_file
-from hardwario.device.connector.jlink import PyLinkRTTConnector
+from rttt.connectors import PyLinkRTTConnector, FileLogConnector
+from rttt.console import Console
+from hardwario.common.utils import download_url
 from hardwario.chester.utils import find_hex
+from hardwario.device.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
 
 
-def nrf_flash(cli: click.Group):
+def validate_hex_file(ctx, param, value):
+    # print('validate_hex_file', ctx.obj, param.name, value)
+    if len(value) == 32 and all(c in string.hexdigits for c in value):
+        return download_url(f'https://firmware.hardwario.com/chester/{value}/hex', filename=f'{value}.hex')
+
+    if os.path.exists(value):
+        return value
+
+    raise click.BadParameter(f'Path \'{value}\' does not exist.')
+
+
+def make_command_flash(cli: click.Group):
     @cli.command('flash')
     @click.option('--halt', is_flag=True, help='Halt program.')
     @click.argument('hex_file', metavar='HEX_FILE_OR_ID', callback=validate_hex_file, default=find_hex('.', no_exception=True))
@@ -32,7 +44,7 @@ def nrf_flash(cli: click.Group):
     return command_flash
 
 
-def nrf_erase(cli: click.Group):
+def make_command_erase(cli: click.Group):
     @cli.command('erase')
     @click.option('--all', is_flag=True, help='Erase application firmware incl. UICR area.')
     @click.pass_context
@@ -48,7 +60,7 @@ def nrf_erase(cli: click.Group):
     return command_erase
 
 
-def nrf_reset(cli: click.Group):
+def make_command_reset(cli: click.Group):
     @cli.command('reset')
     @click.option('--halt', is_flag=True, help='Halt program.')
     @click.pass_context
@@ -63,7 +75,7 @@ def nrf_reset(cli: click.Group):
     return command_reset
 
 
-def nrf_console(cli: click.Group, family):
+def make_command_console(cli: click.Group, family):
 
     default_history_file = os.path.expanduser(f"~/.hio_{family.lower()}_history")
     default_console_file = os.path.expanduser(f"~/.hio_{family.lower()}_console")
@@ -91,6 +103,8 @@ def nrf_console(cli: click.Group, family):
                 end = device_version.rfind('_')
                 device = device_version[:end]
 
+        device = 'NRF9151_XXCA'
+
         prog = ctx.obj['prog']
 
         jlink = pylink.JLink()
@@ -112,7 +126,7 @@ def nrf_console(cli: click.Group, family):
     return command_console
 
 
-def nrf_modem_flash(cli: click.Group):
+def make_command_modem_flash(cli: click.Group):
     @cli.command('modem-flash')
     @click.argument('file', metavar='ZIP_FILE', type=click.Path(readable=True))
     @click.pass_context
@@ -128,3 +142,32 @@ def nrf_modem_flash(cli: click.Group):
         click.echo('Successfully completed')
 
     return command_modem_flash
+
+
+@click.group(name='device', help='Commands for devices.')
+@click.pass_context
+def cli(ctx):
+    pass
+
+
+def make_group(family: str):
+    @cli.group(name=family.lower(), help=f'Commands for {family} devices.')
+    @click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
+    @click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
+    @click.pass_context
+    def group(ctx, jlink_sn, jlink_speed):
+        ctx.obj['prog'] = NRFJProg(family, jlink_sn=jlink_sn, jlink_speed=jlink_speed)
+
+    make_command_flash(group)
+    make_command_erase(group)
+    make_command_reset(group)
+    make_command_console(group, family)
+
+    if family in ['nRF91']:
+        make_command_modem_flash(group)
+
+    return group
+
+
+for family in ['nRF51', 'nRF52', 'nRF53', 'nRF54H', 'nRF54L', 'nRF91']:
+    make_group(family)

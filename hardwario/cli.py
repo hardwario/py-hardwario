@@ -3,7 +3,8 @@ import sys
 import click
 from loguru import logger
 import hardwario
-from hardwario.cli import chester, device
+from hardwario.chester.cli import cli as chester
+from hardwario.device.cli import cli as device
 
 DEFAULT_LOG_LEVEL = 'DEBUG'
 DEFAULT_LOG_FILE = os.path.expanduser("~/.hardwario/cli.log")
@@ -20,8 +21,8 @@ def cli(log_level):
     logger.add(sys.stderr, level=log_level.upper())
 
 
-cli.add_command(chester.cli)
-cli.add_command(device.cli)
+cli.add_command(chester)
+cli.add_command(device)
 
 
 def main():
