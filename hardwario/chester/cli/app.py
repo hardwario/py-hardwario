@@ -4,6 +4,7 @@ import re
 import time
 import click
 import pylink
+import queue
 from loguru import logger
 from hardwario.chester.firmwareapi import FirmwareApi, DEFAULT_API_URL
 from hardwario.chester.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
@@ -13,9 +14,7 @@ from hardwario.chester.connector import PyLinkRTTConnector
 from hardwario.chester.cli.validate import *
 from rttt.connectors import FileLogConnector
 from rttt.console import Console
-
-# from zzz.jlink import PyLinkRTTConnector
-# from hardwario.device.connector.mqtt import MqttBridgeConnector, MqttClientConnector, MqttClient
+from rttt.event import Event, EventType
 
 default_history_file = os.path.expanduser("~/.chester_history")
 default_console_file = os.path.expanduser("~/.chester_console")
@@ -125,10 +124,8 @@ def command_console(ctx, reset, latency, history_file, console_file, coredump_fi
     connector = PyLinkRTTConnector(jlink, latency=latency)
 
     if console_file:
-        connector = FileLogConnector(connector, console_file)
-
-    # mqttc = MqttClient('test.mosquitto.org', 1883)
-    # connector = MqttBridgeConnector(connector, mqttc)
+        text = f'Console: J-Link sn: {prog.get_serial_number()}' if prog.get_serial_number() else 'Console'
+        connector = FileLogConnector(connector, console_file, text=text)
 
     console = Console(connector, history_file=history_file)
     console.run()
@@ -317,21 +314,55 @@ def command_fw_info(ctx, id, show_all):
         click.echo(f'Build Manifest:    {json.dumps(fw["manifest"])}')
 
 
-# @cli.command('debug')
-# @click.pass_context
-# def command_debug(ctx):
-#     '''Start interactive console for shell and logging.'''
+@cli.command('command')
+@click.option('--reset', is_flag=True, help='Reset application firmware.')
+@click.option('--timeout', '-t', type=float, metavar='TIMEOUT', help='Read line timeout in seconds.', default=1, show_default=True)
+@click.option('--console-file', type=click.Path(writable=True), show_default=True, default=default_console_file)
+@click.argument('command', type=str)
+@click.pass_context
+def command_pokus(ctx, reset, timeout, console_file, command):
+    '''Send command to the device and print response.'''
 
-#     mqttc = MqttClient('test.mosquitto.org', 1883)
-#     connector = MqttRemoteConnector(mqttc)
+    prog = ctx.obj['prog']
 
-#     console = Console(connector)
-#     console.run()
+    jlink = pylink.JLink()
+    jlink.open(serial_no=prog.get_serial_number())
+    jlink.set_speed(prog.get_speed())
+    jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
+    jlink.connect('NRF52840_xxAA')
 
-#     # with ctx.obj['prog'] as prog:
-#     #     if reset:
-#     #         prog.reset()
+    if reset:
+        jlink.reset(halt=False)
+        time.sleep(1)
 
-#         # channels = prog.rtt_start()
-#         # logger.info(f'channels: {channels}')
-#         # prog.rtt_stop()
+    connector = PyLinkRTTConnector(jlink, latency=50)
+
+    if console_file:
+        connector = FileLogConnector(connector, console_file, text="Command")
+
+    q = queue.Queue()
+
+    def handle_event(event: Event):
+        if event.type == EventType.OUT:
+            q.put(event.data)
+
+    connector.on(handle_event)
+
+    connector.open()
+
+    for line in command.splitlines():
+        connector.handle(Event(EventType.IN, line))
+
+    deadline = time.time() + timeout
+
+    while True:
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            break
+        try:
+            resp = q.get(timeout=remaining)
+            print(resp)
+        except queue.Empty:
+            break
+
+    connector.close()

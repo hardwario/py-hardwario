@@ -85,7 +85,7 @@ class FirmwareApi:
         logger.debug(f'Response {resp}')
         return resp
 
-    def list(self, offset: int = 0, limit: int | None = None):
+    def list(self, offset: int = 0, limit=None):
         return self._list('/v1/firmware', {}, offset, limit)
 
     def detail(self, id):
