@@ -1,6 +1,7 @@
 import struct
 import array
 import re
+import secrets
 
 
 class PIBException(Exception):
@@ -49,7 +50,14 @@ class PIB:
         1: (88, 4, '<L')
     }
 
-    def __init__(self, version=1, buf=None):
+    CLAIM_TOKEN = {
+        2: (0x45, '33s')
+    }
+    BLE_PASSKEY = {
+        2: (0x66, '17s')
+    }
+
+    def __init__(self, version=1, buf=None, nrf=False):
         self._buf = array.array('B', [0xff] * 128)
         self._default_version = version
         if version == 1:
@@ -63,6 +71,7 @@ class PIB:
 
         self._is_core_module = False
         self._has_rf_correction = False
+        self._is_nrf = nrf
 
         if buf is not None:
             self.load(buf)
@@ -97,6 +106,10 @@ class PIB:
         self._pack(self.SIZE, self._size)
 
     def _update_family(self):
+        if self._is_nrf:
+            self._size = self._default_size + 33 + 17
+            return
+
         self._size = self._default_size
         self._is_core_module = False
 
@@ -201,6 +214,28 @@ class PIB:
             raise PIBException('This device has no RF correction')
         self._pack(self.RF_CORRECTION, value)
 
+    def get_claim_token(self):
+        return self._unpack(self.CLAIM_TOKEN)
+
+    def set_claim_token(self, value):
+        if not re.match(r'^[\dabcdef]{32}$', value) and value != '':
+            raise PIBException('Bad Claim token (32 hexadecimal characters).')
+        self._pack(self.CLAIM_TOKEN, value)
+
+    def gen_claim_token(self):
+        token = secrets.token_hex(16)
+        self.set_claim_token(token)
+        return token
+
+    def get_ble_passkey(self):
+        return self._unpack(self.BLE_PASSKEY)
+
+    def set_ble_passkey(self, value):
+        if not re.match(r'^[a-zA-Z0-9]{0,16}$', value):
+            raise PIBException('Bad BLE passkey (max 16 characters).')
+
+        self._pack(self.BLE_PASSKEY, value)
+
     def get_crc(self):
         fmt = '<L' if self.get_version() == 1 else '>L'
         return struct.unpack_from(fmt, self._buf, self._size - 4)[0]
@@ -240,6 +275,10 @@ class PIB:
             payload['rf_offset'] = self.get_rf_offset()
         if self._has_rf_correction:
             payload['rf_correction'] = self.get_rf_correction()
+
+        if self._is_nrf:
+            payload['claim_token'] = self.get_claim_token()
+            payload['ble_passkey'] = self.get_ble_passkey()
 
         return payload
 
@@ -293,3 +332,11 @@ class PIB:
             for _ in range(8):
                 crc = (crc >> 1) ^ (0xedb88320 & ~((crc & 1) - 1))
         return crc ^ 0xffffffff
+
+
+def make_sn(family, sn):
+    if family > 1023:
+        raise PIBException('Bad family')
+    if sn > 1048575:
+        raise PIBException('Bad serial number')
+    return 0x80000000 | (family << 20) | sn

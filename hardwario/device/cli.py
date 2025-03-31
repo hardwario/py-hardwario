@@ -2,10 +2,13 @@ import os
 import pylink
 import click
 import string
+import json
+import time
 from loguru import logger
 from rttt.connectors import PyLinkRTTConnector, FileLogConnector
 from rttt.console import Console
 from hardwario.common.utils import download_url
+from hardwario.common.pib import PIB, PIBException
 from hardwario.chester.utils import find_hex
 from hardwario.device.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
 
@@ -77,8 +80,8 @@ def make_command_reset(cli: click.Group):
 
 def make_command_console(cli: click.Group, family):
 
-    default_history_file = os.path.expanduser(f"~/.hio_{family.lower()}_history")
-    default_console_file = os.path.expanduser(f"~/.hio_{family.lower()}_console")
+    default_history_file = os.path.expanduser(f"~/.hio_history")
+    default_console_file = os.path.expanduser(f"~/.hio_console")
 
     @cli.command('console')
     @click.option('--reset', is_flag=True, help='Reset application firmware.')
@@ -95,15 +98,8 @@ def make_command_console(cli: click.Group, family):
                 prog.reset()
                 prog.go()
 
-            device_info = prog.read_device_info()
-            logger.info(f'device info: {device_info}')
-
             if not device:
-                device_version = device_info[0].name
-                end = device_version.rfind('_')
-                device = device_version[:end]
-
-        device = 'NRF9151_XXCA'
+                device = prog.get_chip_name()
 
         prog = ctx.obj['prog']
 
@@ -144,6 +140,85 @@ def make_command_modem_flash(cli: click.Group):
     return command_modem_flash
 
 
+def validate_pib_param(ctx, param, value):
+    # print('validate_pib_param', ctx.obj, param.name, value)
+    try:
+        getattr(ctx.obj['pib'], f'set_{param.name}')(value)
+    except PIBException as e:
+        raise click.BadParameter(str(e))
+    return value
+
+
+def make_group_pib(cli: click.Group, family):
+
+    @cli.group(name='pib')
+    @click.pass_context
+    def group_pib(ctx):
+        '''HARDWARIO Product Information Block.'''
+        ctx.obj['pib'] = PIB(2, nrf=True)
+
+    @group_pib.command('read')
+    @click.option('--json', 'out_json', is_flag=True, help='Output in JSON format.')
+    @click.pass_context
+    def command_pib_read(ctx, out_json):
+        '''Read HARDWARIO Product Information Block from UICR.'''
+
+        buffer = None
+        with ctx.obj['prog'] as prog:
+            buffer = prog.read_uicr_pib()
+
+        logger.info(f'buffer: {buffer.hex()}')
+
+        pib = PIB(2, buffer, nrf=True)
+
+        if out_json:
+            click.echo(json.dumps(pib.get_dict(), indent=2))
+        else:
+            click.echo(f'Vendor name: {pib.get_vendor_name()}')
+            click.echo(f'Product name: {pib.get_product_name()}')
+            click.echo(f'Hardware variant: {pib.get_hw_variant()}')
+            click.echo(f'Hardware revision: {pib.get_hw_revision()}')
+            click.echo(f'Serial number: {pib.get_serial_number()}')
+            click.echo(f'Claim token: {pib.get_claim_token()}')
+            click.echo(f'BLE passkey: {pib.get_ble_passkey()}')
+
+    @group_pib.command('write')
+    @click.option('--vendor-name', type=str, help='Vendor name (max 16 characters).', default='HARDWARIO', prompt=True, show_default=True, callback=validate_pib_param)
+    @click.option('--product-name', type=str, help='Product name (max 16 characters).', default=family.upper(), prompt=True, show_default=True, callback=validate_pib_param)
+    @click.option('--hw-variant', type=str, help='Hardware variant.', default='', prompt='Hardware variant', show_default=True, callback=validate_pib_param)
+    @click.option('--hw-revision', type=str, help='Hardware revision in Rx.y format.', default='R0.1', prompt='Hardware revision', show_default=True, callback=validate_pib_param)
+    @click.option('--serial-number', type=str, help='Serial number in decimal format.', prompt=True, callback=validate_pib_param)
+    @click.option('--claim-token', type=str, help='Claim token for device self-registration (32 hexadecimal characters).', default='', prompt=True, show_default=True, callback=validate_pib_param)
+    @click.option('--ble-passkey', type=str, help='Bluetooth security passkey (max 16 characters).', default='123456', prompt=True, show_default=True, callback=validate_pib_param)
+    @click.option('--halt', is_flag=True, help='Halt program.')
+    @click.pass_context
+    def command_pib_write(ctx, vendor_name, product_name, hw_variant, hw_revision, serial_number, claim_token, ble_passkey, halt):
+        '''Write HARDWARIO Product Information Block to UICR.'''
+
+        logger.info(f'write pib: {vendor_name}, {product_name}, {hw_variant}, {hw_revision}, {serial_number}, {claim_token}, {ble_passkey}')
+
+        pib = ctx.obj['pib']
+
+        if claim_token == '':
+            pib.gen_claim_token()
+
+        buffer = pib.get_buffer()
+
+        logger.info(f'buffer: {buffer.hex()}')
+
+        with ctx.obj['prog'] as prog:
+            if family == 'nRF91':
+                click.echo('Recovering device...')
+                prog.recover()
+                prog.reset()
+                prog.halt()
+                click.echo('Recovering device done.')
+
+            prog.write_uicr_pib(buffer, halt=halt)
+
+        click.echo('Successfully completed')
+
+
 @click.group(name='device', help='Commands for devices.')
 @click.pass_context
 def cli(ctx):
@@ -157,6 +232,7 @@ def make_group(family: str):
     @click.pass_context
     def group(ctx, jlink_sn, jlink_speed):
         ctx.obj['prog'] = NRFJProg(family, jlink_sn=jlink_sn, jlink_speed=jlink_speed)
+        ctx.obj['family'] = family
 
     make_command_flash(group)
     make_command_erase(group)
@@ -164,6 +240,7 @@ def make_group(family: str):
     make_command_console(group, family)
 
     if family in ['nRF91']:
+        make_group_pib(group, family)
         make_command_modem_flash(group)
 
     return group
