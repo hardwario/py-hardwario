@@ -244,14 +244,14 @@ test = ["pytest", "pytest-xdist", "setuptools"]
 
 [[package]]
 name = "pylink-square"
-version = "1.5.0"
+version = "1.5.1"
 description = "Python interface for SEGGER J-Link."
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "pylink_square-1.5.0-py2.py3-none-any.whl", hash = "sha256:3da667dfdfb8421e568e85dddd9fe526fbbad58cd23ecf33d84fa14e387601a2"},
-    {file = "pylink_square-1.5.0.tar.gz", hash = "sha256:50b33411c890f37306737cbe96e034591085f82891c8933a8a8edabb7d54cab7"},
+    {file = "pylink_square-1.5.1-py2.py3-none-any.whl", hash = "sha256:4907ae8e63db048a50a3ce37de10182b09b57f7f2665d097435c1ca20d570ddf"},
+    {file = "pylink_square-1.5.1.tar.gz", hash = "sha256:5dae5fd211420d844b54f47d4f79965ca9f524b922cb0cc428a75674b71b4ec6"},
 ]
 
 [package.dependencies]

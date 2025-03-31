@@ -158,6 +158,51 @@ class NRFJProg(LowLevel.API):
                 return des.start
         raise NRFJProgException('UICR descriptor not found.')
 
+    def get_chip_name(self):
+        device_info = self.read_device_info()
+        logger.debug(f'device info: {device_info}')
+
+        name = device_info[0].name
+        end = name.rfind('_')
+        device = name[:end]
+
+        if device == 'NRF9120_xxAA':
+            return 'NRF9151_XXCA'
+
+        return device
+
+    def get_uicr_pib_address(self):
+        device_family = self.read_device_family()
+        if device_family == 'NRF52':
+            return self.get_uicr_address() + 0x80
+        if device_family == 'NRF91':
+            # return 0x00FF8000 + 0x108
+            return self.get_uicr_address() + 0x108
+
+        raise NRFJProgException('Invalid MCU support only for NRF52 and NRF91')
+
+    def read_uicr_pib(self):
+        addr = self.get_uicr_pib_address()
+        return bytes(self.read(addr, 128))
+
+    def write_uicr_pib(self, buffer: bytes, halt=False):
+        addr = self.get_uicr_pib_address()
+
+        self.reset()
+        self.halt()
+
+        family = self.read_device_family()
+        if family == 'NRF52':
+            self.erase_uicr()
+
+        self.write(addr, buffer, True)
+
+        self.reset()
+        if halt:
+            self.halt()
+        else:
+            self.go()
+
     def __enter__(self):
         self.open()
         return self
