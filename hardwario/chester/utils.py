@@ -11,12 +11,11 @@ def test_file(*paths):
 
 
 def find_hex(app_path, no_exception=False):
-    out_path = join(app_path, 'build', 'zephyr')
-
-    for name in ('merged.hex', 'zephyr.hex'):
-        hex_path = test_file(out_path, name)
-        if hex_path:
-            return hex_path
+    for out_path in (join(app_path, 'build'), join(app_path, 'build', 'zephyr')):
+        for name in ('merged.hex', 'zephyr.hex'):
+            hex_path = test_file(out_path, name)
+            if hex_path:
+                return hex_path
 
     if no_exception:
         return None

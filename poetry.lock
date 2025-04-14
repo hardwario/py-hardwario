@@ -244,14 +244,14 @@ test = ["pytest", "pytest-xdist", "setuptools"]
 
 [[package]]
 name = "pylink-square"
-version = "1.5.1"
+version = "1.6.0"
 description = "Python interface for SEGGER J-Link."
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "pylink_square-1.5.1-py2.py3-none-any.whl", hash = "sha256:4907ae8e63db048a50a3ce37de10182b09b57f7f2665d097435c1ca20d570ddf"},
-    {file = "pylink_square-1.5.1.tar.gz", hash = "sha256:5dae5fd211420d844b54f47d4f79965ca9f524b922cb0cc428a75674b71b4ec6"},
+    {file = "pylink_square-1.6.0-py2.py3-none-any.whl", hash = "sha256:4ec26cc02ac22cbe9acbc317ea221d1e586d1db40cbdc257e2b3ac30adaeaded"},
+    {file = "pylink_square-1.6.0.tar.gz", hash = "sha256:827e49ad40602fec5639eefecf0637066186c43405c69f8f63bb51aeccc5f1c5"},
 ]
 
 [package.dependencies]
@@ -375,14 +375,14 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rttt"
-version = "1.3.0"
+version = "1.3.1"
 description = "HARDWARIO Real Time Transfer Terminal Console"
 optional = false
 python-versions = "<4,>=3.8"
 groups = ["main"]
 files = [
-    {file = "rttt-1.3.0-py3-none-any.whl", hash = "sha256:6b7def2480d7ddc70926ffbf90cc73092d6c58ae56ffdad5da27596af7f68488"},
-    {file = "rttt-1.3.0.tar.gz", hash = "sha256:6a04e87628f512244443b61915db7fe879d2e65f540395da71d3bcd6572bb091"},
+    {file = "rttt-1.3.1-py3-none-any.whl", hash = "sha256:fff5d14df4bd9d23a0f7be3c8c68ceccd07f44b88e149fb69bebef12988f0f0b"},
+    {file = "rttt-1.3.1.tar.gz", hash = "sha256:1f4ae1350457f31c82468b210d61fdeba57672df6d1f1035c5605f68fc387e21"},
 ]
 
 [package.dependencies]
@@ -390,7 +390,7 @@ click = ">=8.1.8,<9.0.0"
 loguru = ">=0.7.3,<0.8.0"
 prompt-toolkit = ">=3.0.50,<4.0.0"
 psutil = ">=7.0.0,<8.0.0"
-pylink-square = ">=1.5.0,<2.0.0"
+pylink-square = ">=1.6.0,<2.0.0"
 pyperclip = ">=1.9.0,<2.0.0"
 pyyaml = ">=6.0.2,<7.0.0"
 
@@ -420,14 +420,14 @@ files = [
 
 [[package]]
 name = "urllib3"
-version = "2.3.0"
+version = "2.4.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df"},
-    {file = "urllib3-2.3.0.tar.gz", hash = "sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d"},
+    {file = "urllib3-2.4.0-py3-none-any.whl", hash = "sha256:4e16665048960a0900c702d4a66415956a584919c03361cac9f1df5c5dd7e813"},
+    {file = "urllib3-2.4.0.tar.gz", hash = "sha256:414bc6535b787febd7567804cc015fee39daab8ad86268f1310a9250697de466"},
 ]
 
 [package.extras]
@@ -467,4 +467,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4"
-content-hash = "6796e6cf79e0cafb57799f32c0206dee563de2dadb7a3a4806ae02ac7ab087e0"
+content-hash = "89fd3b71765bc7af4557872c8f0681b5706e316cb2a8a8725ac9d35666469ee4"
