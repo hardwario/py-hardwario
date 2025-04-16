@@ -208,12 +208,11 @@ def make_group_pib(cli: click.Group, family):
 
         with ctx.obj['prog'] as prog:
             if family == 'nRF91':
-                click.echo('Recovering device...')
+                click.echo('Recovering and unprotect device (This operation might take 30s.)')
                 prog.recover()
-                prog.reset()
-                prog.halt()
-                click.echo('Recovering device done.')
+                prog.disable_bprot()
 
+            click.echo('Writing Product Information Block')
             prog.write_uicr_pib(buffer, halt=halt)
 
         click.echo('Successfully completed')
