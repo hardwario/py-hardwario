@@ -8,5 +8,4 @@ dist/
 .Python
 develop-eggs/
 .pytest_cache
-*.bin
-*.hex
+zzz/

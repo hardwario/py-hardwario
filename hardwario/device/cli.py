@@ -11,6 +11,7 @@ from hardwario.common.utils import download_url
 from hardwario.common.pib import PIB, PIBException
 from hardwario.chester.utils import find_hex
 from hardwario.device.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
+from hardwario.resources import get_resource_path
 
 
 def validate_hex_file(ctx, param, value):
@@ -208,9 +209,10 @@ def make_group_pib(cli: click.Group, family):
 
         with ctx.obj['prog'] as prog:
             if family == 'nRF91':
-                click.echo('Recovering and unprotect device (This operation might take 30s.)')
+                click.echo('Recovering device (This operation might take 30s.)')
                 prog.recover()
-                prog.disable_bprot()
+                click.echo('Writing image to disable ap protect.')
+                prog.program_file(get_resource_path('nrf91_disable_ap_protect.hex'))
 
             click.echo('Writing Product Information Block')
             prog.write_uicr_pib(buffer, halt=halt)
