@@ -1,5 +1,7 @@
 import requests
 import subprocess
+import glob
+import os
 from loguru import logger
 from hardwario.chester.utils import find_hex, test_file
 from hardwario.common.utils import get_file_hash
@@ -65,6 +67,10 @@ class FirmwareApi:
         files['firmware_hex'] = open(hex_path, 'rb')
 
         app_update_path = test_file(app_path, 'build', 'zephyr', 'app_update.bin')
+        if not app_update_path:
+            ff = glob.glob(os.path.join(app_path, 'build', '*', 'zephyr', 'zephyr.signed.bin'))
+            if ff:
+                app_update_path = ff[0]
         logger.debug(f'app_update_path={app_update_path}')
         if app_update_path:
             data['app_update_sha256'] = get_file_hash(app_update_path)
