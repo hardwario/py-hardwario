@@ -5,7 +5,10 @@ import os
 import socket
 import time
 import sys
+from loguru import logger
+import pylink
 from hardwario.chester.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
+from hardwario.device import jlink_setup
 
 
 @click.group(name='lte')
@@ -106,9 +109,10 @@ def command_reset(ctx, jlink_sn, jlink_speed):
 @click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='Specify J-Link serial number.')
 @click.option('--jlink-speed', type=int, metavar="SPEED", help='Specify J-Link clock speed in kHz.', default=DEFAULT_JLINK_SPEED_KHZ, show_default=True)
 @click.option('--file', '-f', 'filename', metavar='FILE', type=click.Path(writable=True))
-@click.option('--tcp', '-t', 'tcpconnect', metavar='TCP', type=str, help='TCP connect to server, format: <host>:<port>')
+@click.option('--tcp', 'tcpconnect', metavar='TCP', type=str, help='TCP connect to server, format: <host>:<port>')
+@click.option('--duration', '-d', 'duration', metavar='DURATION', type=int, help='Duration in seconds, after which the trace will be stopped.')
 @click.pass_context
-def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect):
+def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
     '''Modem trace.'''
 
     # sudo socat -d -d pty,link=/dev/virtual_serial_port,raw,echo=0,group-late=dialout,perm=0777 TCP-LISTEN:5555,reuseaddr,fork
@@ -118,6 +122,13 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect):
 
     if jlink_speed != DEFAULT_JLINK_SPEED_KHZ:
         ctx.obj['prog'].set_speed(jlink_speed)
+
+    prog = ctx.obj['prog']
+
+    with prog as p:
+        pass
+
+    jlink = jlink_setup('NRF9160_xxAA', serial_no=prog.get_serial_number(), speed=prog.get_speed())
 
     fd = None
     client_socket = None
@@ -130,58 +141,92 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, int(port)))
 
+    running = False
+
     while True:
         print('Starting modem trace...')
 
         text_len = 0
         last_text = ''
+        num_up = 0
+        buffer_index = 0
+        num_bytes = 1000
 
         try:
-            with ctx.obj['prog'] as prog:
+            logger.info('Opening RTT')
+            jlink.rtt_start()
+            running = True
 
-                channels = prog.rtt_start()
+            for _ in range(100):
+                try:
+                    num_up = jlink.rtt_get_num_up_buffers()
+                    num_down = jlink.rtt_get_num_down_buffers()
+                    logger.info(f'RTT started, {num_up} up bufs, {num_down} down bufs.')
+                    break
+                except pylink.errors.JLinkRTTException:
+                    time.sleep(0.1)
+            else:
+                raise Exception('Failed to find RTT block')
 
-                if 'modem_trace' not in channels:
-                    raise Exception('Not found modem_trace channel in RTT.')
+            for i in range(num_up):
+                desc = jlink.rtt_get_buf_descriptor(i, 1)
+                logger.info(f'Up buffer {i}: {desc}, "{desc.acName}"')
+                if desc.acName == b'modem_trace':
+                    buffer_index = i
+                    num_bytes = min(desc.SizeOfBuffer, 1000)
+                    break
+            else:
+                raise Exception('Not found modem trace channel in RTT.')
 
-                print('Started modem trace')
-                recv_len = 0
-                text_len = 0
+            logger.info(f'Modem trace buffer index: {buffer_index}')
 
-                e_cnt = 0
-                while True:
+            print('Started modem trace')
+            start_time = time.time()
+            recv_len = 0
+            text_len = 0
+
+            e_cnt = 0
+            while True:
+                try:
+                    data = jlink.rtt_read(buffer_index, num_bytes)
+                except Exception as e:
+                    e_cnt += 1
+                    if e_cnt > 10:
+                        raise
+                    continue
+
+                if fd:
+                    fd.write(data)
+                    fd.flush()
+
+                if client_socket:
                     try:
-                        data = prog.rtt_read('modem_trace', encoding=None)
+                        client_socket.send(data)
                     except Exception as e:
-                        e_cnt += 1
-                        if e_cnt > 10:
-                            raise
-                        continue
+                        if text_len:
+                            print()
+                            text_len = 0
+                        print(e)
 
-                    if fd:
-                        fd.write(data)
-                        fd.flush()
+                if text_len:
+                    print(f"\r{' ' * text_len}\r", end='')
+                if data:
+                    recv_len += len(data)
 
-                    if client_socket:
-                        try:
-                            client_socket.send(data)
-                        except Exception as e:
-                            if text_len:
-                                print()
-                                text_len = 0
-                            print(e)
+                running = (time.time() - start_time)
+                last_text = f'Receive: {recv_len} B ({running:.1f}s)'
+                text_len = len(last_text)
+                print(last_text, end='')
+                sys.stdout.flush()
 
-                    if text_len:
-                        print(f"\r{' ' * text_len}\r", end='')
-                    if data:
-                        recv_len += len(data)
-
-                    last_text = f'Receive: {recv_len} B'
-                    text_len = len(last_text)
-                    print(last_text, end='')
-                    sys.stdout.flush()
+                if duration and running >= duration:
+                    jlink.rtt_stop()
+                    print(f'\nStopping modem trace.')
+                    sys.exit(0)
 
         except Exception as e:
+            if running:
+                jlink.rtt_stop()
             if last_text:
                 print()
             print('Restart exception:', str(e))
