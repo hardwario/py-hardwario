@@ -12,6 +12,7 @@ from hardwario.common.pib import PIB, PIBException
 from hardwario.chester.utils import find_hex
 from hardwario.device.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
 from hardwario.resources import get_resource_path
+from hardwario.device import jlink_setup
 
 
 def validate_hex_file(ctx, param, value):
@@ -104,11 +105,7 @@ def make_command_console(cli: click.Group, family):
 
         prog = ctx.obj['prog']
 
-        jlink = pylink.JLink()
-        jlink.open(serial_no=prog.get_serial_number())
-        jlink.set_speed(prog.get_speed())
-        jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
-        jlink.connect(device)
+        jlink = jlink_setup(device, serial_no=prog.get_serial_number(), speed=prog.get_speed())
 
         connector = PyLinkRTTConnector(jlink, latency=latency)
 
