@@ -1,5 +1,6 @@
 import time
 from loguru import logger
+import logging
 from pynrfjprog import APIError, LowLevel
 from pynrfjprog.Parameters import EraseAction, MemoryType, ReadbackProtection
 
@@ -24,10 +25,9 @@ class NRFJProgRTTNoChannels(NRFJProgException):
 
 class NRFJProg(LowLevel.API):
 
-    def __init__(self, device_family=None, jlink_sn=None, jlink_speed=DEFAULT_JLINK_SPEED_KHZ, log=False, log_suffix=None):
+    def __init__(self, device_family=None, jlink_sn=None, jlink_speed=DEFAULT_JLINK_SPEED_KHZ, log=False):
         self.device_family = device_family
-        self.log = log
-        self.log_suffix = log_suffix
+        self._log = log
         self._rtt_channels = None
         self._jlink_ip = None
         self.set_serial_number(jlink_sn)
@@ -65,10 +65,15 @@ class NRFJProg(LowLevel.API):
     def get_speed(self):
         return self._jlink_speed
 
+    def dbg(self, record):
+        logger.debug(record.getMessage())
+
     def open(self):
         logger.debug('Opening')
         try:
-            super().__init__(LowLevel.DeviceFamily.UNKNOWN, log=self.log)
+            if self._log:
+                logging.getLogger('pynrfjprog.LowLevel').setLevel(logging.DEBUG)
+            super().__init__(LowLevel.DeviceFamily.UNKNOWN, log=self._log, log_str_cb=self.dbg)
             super().open()
 
             if self._jlink_ip:
