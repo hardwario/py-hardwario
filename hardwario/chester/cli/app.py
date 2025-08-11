@@ -12,6 +12,7 @@ from hardwario.chester.pib import PIB
 from hardwario.chester.utils import find_hex
 from hardwario.chester.connector import PyLinkRTTConnector
 from hardwario.chester.cli.validate import *
+from hardwario.device import jlink_setup
 from rttt.connectors import FileLogConnector
 from rttt.console import Console
 from rttt.event import Event, EventType
@@ -115,11 +116,7 @@ def command_console(ctx, reset, latency, history_file, console_file, coredump_fi
 
     prog = ctx.obj['prog']
 
-    jlink = pylink.JLink()
-    jlink.open(serial_no=prog.get_serial_number())
-    jlink.set_speed(prog.get_speed())
-    jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
-    jlink.connect('NRF52840_xxAA')
+    jlink = jlink_setup('NRF52840_xxAA', serial_no=prog.get_serial_number(), speed=prog.get_speed())
 
     connector = PyLinkRTTConnector(jlink, latency=latency)
 

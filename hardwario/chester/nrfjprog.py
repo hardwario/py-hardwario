@@ -14,11 +14,11 @@ from hardwario.device.nrfjprog import (
 
 class NRFJProg(NRFJProgBase):
 
-    def __init__(self, mcu, jlink_sn=None, jlink_speed=DEFAULT_JLINK_SPEED_KHZ, log=False, log_suffix=None):
+    def __init__(self, mcu, jlink_sn=None, jlink_speed=DEFAULT_JLINK_SPEED_KHZ, log=False):
         if mcu not in ('app', 'lte'):
             raise NRFJProgException(f'Unknown MCU type: {mcu}')
 
-        super().__init__(mcu, jlink_sn, jlink_speed, log, log_suffix)
+        super().__init__(mcu, jlink_sn, jlink_speed, log)
 
     def write_uicr(self, buffer: bytes, halt=False):
         if self.device_family != 'app':
