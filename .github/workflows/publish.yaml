@@ -84,11 +84,17 @@ jobs:
         run: |
           pyinstaller --onefile --name hardwario hardwario/__main__.py
 
+      - name: Package ZIP (EXE + jlink worker)
+        run: |
+          NRFPATH="$(poetry env info -p)/Lib/site-packages/pynrfjprog/lib_x64"
+          cp "$NRFPATH"/*.dll dist/
+          cp "$NRFPATH"/jlinkarm_nrf_worker.exe dist/
+          zip -j hardwario-win.zip dist/*
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hardwario-win
-          path: dist/hardwario.exe
+          path: hardwario-win.zip
 
       # - name: Upload asset(s) to existing release (same as tag)
       #   env:
