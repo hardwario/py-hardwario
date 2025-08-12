@@ -5,6 +5,10 @@ on:
     # tags:
     #   - 'v*.*.*'
 
+defaults:
+  run:
+    shell: bash
+
 permissions:
   contents: read
 
@@ -60,7 +64,10 @@ jobs:
 
       - name: Install Poetry
         run: |
-          (curl -sSL https://install.python-poetry.org | python - -y)
+          curl -sSL https://install.python-poetry.org | python - -y
+
+      - name: Update PATH
+        run: |
           echo "$HOME/AppData/Roaming/Python/Scripts" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
