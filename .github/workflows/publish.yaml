@@ -91,7 +91,7 @@ jobs:
           ls -lha "$NRFPATH"
           cp "$NRFPATH/lib_x64/"*.dll dist/
           cp "$NRFPATH/lib_x64/jlinkarm_nrf_worker.exe" dist/
-          ls -lha dir
+          ls -lha dist
           zip -j hardwario-win.zip dist/*
 
       - name: Upload artifact
