@@ -97,7 +97,12 @@ jobs:
           cp "$NRFPATH/lib_x64/jlinkarm_nrf_worker.exe" dist/
           ls -lha dist
           zip -j hardwario-win.zip dist/*
-
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: hardwario-win.zip
+          
       # - name: Upload asset(s) to existing release (same as tag)
       #   env:
       #     TAG: ${{ github.ref_name }}
