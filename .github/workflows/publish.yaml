@@ -2,23 +2,55 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    # tags:
+    #   - 'v*.*.*'
 
 permissions:
   contents: read
 
 jobs:
-  pypi-publish:
-    name: Upload release to PyPI
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/project/hardwario/
+#   pypi-publish:
+#     name: Upload release to PyPI
+#     runs-on: ubuntu-latest
+#     environment:
+#       name: pypi
+#       url: https://pypi.org/project/hardwario/
+#     permissions:
+#       id-token: write
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Set up Python 3.12
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.12"
+
+#       - name: Install Poetry
+#         run: |
+#           curl -sSL https://install.python-poetry.org | python - -y
+
+#       - name: Update PATH
+#         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+#       - name: Update Poetry configuration
+#         run: poetry config virtualenvs.create false
+
+#       - name: Install dependencies
+#         run: poetry sync --no-interaction
+
+#       - name: Package project
+#         run: poetry build
+
+#       - name: Publish package distributions to PyPI
+#         uses: pypa/gh-action-pypi-publish@release/v1
+
+  build-win:
+    runs-on: windows-latest
     permissions:
-      id-token: write
+      contents: write
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12
@@ -36,11 +68,26 @@ jobs:
       - name: Update Poetry configuration
         run: poetry config virtualenvs.create false
 
-      - name: Install dependencies
-        run: poetry sync --no-interaction
+      - name: Install deps (incl. PyInstaller)
+        run: |
+          poetry sync --no-interaction || true
+          python -m pip install --upgrade pip
+          pip install pyinstaller
 
-      - name: Package project
-        run: poetry build
+      - name: Build EXE (onefile)
+        run: |
+          pyinstaller --onefile --name hardwario hardwario/__main__.py
 
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardwario-win
+          path: dist/hardwario.exe
+
+      # - name: Upload asset(s) to existing release (same as tag)
+      #   env:
+      #     TAG: ${{ github.ref_name }}
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     gh release view "$TAG" >/dev/null
+      #     gh release upload "$TAG" artifacts/hardwario.exe --clobber
