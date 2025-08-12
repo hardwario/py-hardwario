@@ -62,6 +62,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install zip utility
+        run: |
+          choco install zip -y
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python - -y
@@ -93,11 +97,6 @@ jobs:
           cp "$NRFPATH/lib_x64/jlinkarm_nrf_worker.exe" dist/
           ls -lha dist
           zip -j hardwario-win.zip dist/*
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          path: hardwario-win.zip
 
       # - name: Upload asset(s) to existing release (same as tag)
       #   env:
