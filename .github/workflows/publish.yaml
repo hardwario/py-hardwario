@@ -88,10 +88,10 @@ jobs:
         run: |
           NRFPATH="$(poetry env info -p)/Lib/site-packages/pynrfjprog/lib_x64"
           echo "$NRFPATH" 
-          cp "$NRFPATH"/*.dll dist/
-          cp "$NRFPATH"/jlinkarm_nrf_worker.exe dist/
-          ls -lha dir
-          zip -j hardwario-win.zip dist/*
+          #cp "$NRFPATH"/*.dll dist/
+          #cp "$NRFPATH"/jlinkarm_nrf_worker.exe dist/
+          #ls -lha dir
+          #zip -j hardwario-win.zip dist/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
