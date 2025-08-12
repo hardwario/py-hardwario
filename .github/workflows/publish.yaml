@@ -82,14 +82,11 @@ jobs:
 
       - name: Package ZIP (EXE + jlink worker)
         run: |
-          poetry env info
-          poetry env info --help
-          poetry env info --path
-          NRFPATH="$(poetry env info --path)/Lib/site-packages/pynrfjprog/lib_x64"
+          NRFPATH="$(python -c "import pynrfjprog; import os; print(os.path.dirname(pynrfjprog.__file__))")"
           echo "$NRFPATH" 
-          #cp "$NRFPATH"/*.dll dist/
-          #cp "$NRFPATH"/jlinkarm_nrf_worker.exe dist/
-          #ls -lha dir
+          cp "$NRFPATH/lib_x64/*.dll" dist/
+          cp "$NRFPATH/lib_x64/jlinkarm_nrf_worker.exe" dist/
+          ls -lha dir
           #zip -j hardwario-win.zip dist/*
 
       - name: Build EXE (onefile)
