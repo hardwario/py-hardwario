@@ -6,7 +6,7 @@ on:
       - 'v*.*.*'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   pypi-publish:
@@ -44,3 +44,65 @@ jobs:
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install zip utility
+        run: |
+          choco install zip -y
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python - -y
+
+      - name: Update PATH
+        run: |
+          echo "$HOME/AppData/Roaming/Python/Scripts" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Update Poetry configuration
+        run: poetry config virtualenvs.create false
+
+      - name: Install deps (incl. PyInstaller)
+        run: |
+          poetry sync --no-interaction || true
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build EXE (onefile)
+        run: |
+          pyinstaller --onefile --name hardwario hardwario/__main__.py
+
+      - name: Package ZIP (EXE + jlink worker)
+        run: |
+          NRFPATH="$(python -c "import pynrfjprog; import os; print(os.path.dirname(pynrfjprog.__file__))")"
+          echo "$NRFPATH"
+          ls -lha "$NRFPATH"
+          cp "$NRFPATH/lib_x64/"*.dll dist/
+          cp "$NRFPATH/lib_x64/jlinkarm_nrf_worker.exe" dist/
+          ls -lha dist
+          zip -j hardwario-win.zip dist/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardwario-win-${{ github.ref_name }}.zip
+          path: hardwario-win.zip
+
+      - name: Upload asset(s) to release (create if missing)
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mv hardwario-win.zip "hardwario-win-$TAG.zip"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "$TAG" --notes ""
+          gh release upload "$TAG" "hardwario-win-$TAG.zip" --clobber
