@@ -80,6 +80,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
 
+      - name: Package ZIP (EXE + jlink worker)
+        run: |
+          poetry env info
+          poetry env info --help
+          poetry env info -p
+          NRFPATH="$(poetry env info -p)/Lib/site-packages/pynrfjprog/lib_x64"
+          echo "$NRFPATH" 
+          #cp "$NRFPATH"/*.dll dist/
+          #cp "$NRFPATH"/jlinkarm_nrf_worker.exe dist/
+          #ls -lha dir
+          #zip -j hardwario-win.zip dist/*
+
       - name: Build EXE (onefile)
         run: |
           pyinstaller --onefile --name hardwario hardwario/__main__.py
