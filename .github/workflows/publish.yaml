@@ -60,10 +60,9 @@ jobs:
 
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python - -y
-
-      - name: Update PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+          (curl -sSL https://install.python-poetry.org | python - -y)
+          echo "$HOME/AppData/Roaming/Python/Scripts" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Update Poetry configuration
         run: poetry config virtualenvs.create false
