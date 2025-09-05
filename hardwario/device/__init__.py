@@ -33,17 +33,19 @@ def jlink_setup(device, serial_no=None, speed=2000):
         firmware_newer = False
         logger.info('J-Link firmware_newer: not supported')
 
-    if firmware_outdated:
-        if click.confirm('Newer firmware version available. Can you update?', default=False):
-            jlink.update_firmware()
-            logger.info('Firmware updated. Please restart the program.')
-            exit(0)
+    if firmware_outdated or firmware_newer:
+        text_ask = 'A newer J-Link firmware version is available. Would you like to update?'
+        text_done = 'J-Link firmware has been updated. Please run the program again.'
+        if firmware_newer:
+            text_ask = 'The J-Link firmware version is newer than the DLL supports. Would you like to synchronize with the DLL?'
+            text_done = 'J-Link firmware has been synchronized with the DLL. Please run the program again.'
 
-    if firmware_newer:
-        if click.confirm('Firmware version is newer than DLL supports. Synchonize firmware with DLL?', default=False):
-            jlink.invalidate_firmware()
+        if click.confirm(text_ask, default=False):
+            if firmware_newer:
+                jlink.invalidate_firmware()
             jlink.update_firmware()
-            logger.info('Firmware synchronized. Please restart the program.')
+            logger.info(text_done)
+            click.echo(text_done)
             exit(0)
 
     logger.info(f'J-Link device: {device}')

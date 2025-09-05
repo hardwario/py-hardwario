@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hardwario"
-version = "1.6.6"
+version = "1.6.7"
 description = "HARDWARIO Command Line Tool"
 authors = ["Karel Blavka <karel.blavka@hardwario.com>"]
 license = "MIT"
