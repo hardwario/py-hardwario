@@ -195,6 +195,11 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
                         raise
                     continue
 
+                if not data:
+                    continue
+
+                data = bytes(data)
+
                 if fd:
                     fd.write(data)
                     fd.flush()
@@ -229,5 +234,7 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
                 jlink.rtt_stop()
             if last_text:
                 print()
+            if os.getenv('DEBUG', False):
+                raise e
             print('Restart exception:', str(e))
             time.sleep(0.5)
