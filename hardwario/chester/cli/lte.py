@@ -141,10 +141,16 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, int(port)))
 
-    running = False
+    print('Starting modem trace...')
 
+    class ResetException(Exception):
+        pass
+
+    running = False
+    start_time = 0
     while True:
-        print('Starting modem trace...')
+        if jlink is None:
+            jlink = jlink_setup('NRF9160_xxAA', serial_no=prog.get_serial_number(), speed=prog.get_speed())
 
         text_len = 0
         last_text = ''
@@ -181,43 +187,58 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
             logger.info(f'Modem trace buffer index: {buffer_index}')
 
             print('Started modem trace')
-            start_time = time.time()
+            if not start_time:
+                start_time = time.time()
             recv_len = 0
             text_len = 0
-
             e_cnt = 0
+
             while True:
                 try:
+                    jlink.memory_read32(0x40005400, 1)[0] # RESETREAS_NS
+                except KeyboardInterrupt:
+                    raise
+                except Exception as e:
+                    raise ResetException()
+
+                try:
+                    t = jlink.rtt_read(0, num_bytes)
+                    if t:
+                        if text_len:
+                            print()
+                            text_len = 0
+                        txt = bytes(t).decode('utf-8', errors="backslashreplace")
+                        print(txt)
                     data = jlink.rtt_read(buffer_index, num_bytes)
+                except KeyboardInterrupt:
+                    raise
                 except Exception as e:
                     e_cnt += 1
                     if e_cnt > 10:
                         raise
                     continue
 
-                if not data:
-                    continue
+                if data:
+                    data = bytes(data)
+                    recv_len += len(data)
 
-                data = bytes(data)
+                    if fd:
+                        fd.write(data)
+                        fd.flush()
 
-                if fd:
-                    fd.write(data)
-                    fd.flush()
-
-                if client_socket:
-                    try:
-                        client_socket.send(data)
-                    except Exception as e:
-                        if text_len:
-                            print()
-                            text_len = 0
-                        print(e)
+                    if client_socket:
+                        try:
+                            client_socket.send(data)
+                        except Exception as e:
+                            if text_len:
+                                print()
+                                text_len = 0
+                            print(e)
+                else:
+                    time.sleep(0.05)
 
                 if text_len:
                     print(f"\r{' ' * text_len}\r", end='')
-                if data:
-                    recv_len += len(data)
-
                 running = (time.time() - start_time)
                 last_text = f'Receive: {recv_len} B ({running:.1f}s)'
                 text_len = len(last_text)
@@ -227,14 +248,34 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
                 if duration and running >= duration:
                     jlink.rtt_stop()
                     print(f'\nStopping modem trace.')
-                    sys.exit(0)
-
-        except Exception as e:
-            if running:
-                jlink.rtt_stop()
+                    return
+        except KeyboardInterrupt:
             if last_text:
                 print()
+            if running:
+                jlink.rtt_stop()
+            print('Stopping modem trace.')
+            if fd:
+                fd.close()
+            if client_socket:
+                client_socket.close()
+            return
+
+        except ResetException:
+            print('\nTarget reset detected, restarting trace...')
+            jlink.rtt_stop()
+            jlink.close()
+            jlink = None
+            running = False
+            time.sleep(1)
+
+        except Exception as e:
+            if last_text:
+                print()
+            if running:
+                jlink.rtt_stop()
             if os.getenv('DEBUG', False):
                 raise e
-            print('Restart exception:', str(e))
-            time.sleep(0.5)
+            if not isinstance(e, ResetException):
+                print('Restart exception:', str(e))
+                time.sleep(0.5)
