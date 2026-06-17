@@ -3,7 +3,7 @@ import subprocess
 import glob
 import os
 from loguru import logger
-from hardwario.chester.utils import find_hex, test_file
+from hardwario.chester.utils import find_hex, find_manifest_json, find_zephyr_elf, test_file
 from hardwario.common.utils import get_file_hash
 
 # DEFAULT_API_URL = 'http://0.0.0.0:4000/chester/api'
@@ -76,12 +76,12 @@ class FirmwareApi:
             data['app_update_sha256'] = get_file_hash(app_update_path)
             files['app_update_bin'] = open(app_update_path, 'rb')
 
-        manifest_json_path = test_file(app_path, 'build', 'zephyr', 'dfu_application.zip_manifest.json')
+        manifest_json_path = find_manifest_json(app_path, True)
         logger.debug(f'manifest_json_path={manifest_json_path}')
         if manifest_json_path:
             files['manifest'] = open(manifest_json_path, 'rb')
 
-        zephyr_elf_path = test_file(app_path, 'build', 'zephyr', 'zephyr.elf')
+        zephyr_elf_path = find_zephyr_elf(app_path, True)
         logger.debug(f'zephyr_elf_path={zephyr_elf_path}')
         if zephyr_elf_path:
             data['zephyr_elf_sha256'] = get_file_hash(zephyr_elf_path)
