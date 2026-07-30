@@ -1,67 +1,76 @@
-from typing import Callable
 from loguru import logger
+from rttt.connectors import Connector, Middleware
+from rttt.event import Event, EventType
 from hardwario.common.mqtt_client import MqttClient
-from hardwario.cli.console.connector import EventType, Connector
 
 
-class MqttBridgeConnector(Connector):
+class MqttBridgeMiddleware(Middleware):
+    """Mirror a connector's terminal and logger output onto MQTT.
+
+    Terminal input is not passed straight to the wrapped connector; it is
+    published to the input topic and only reaches the connector once it comes
+    back from the broker, so remote observers see the same input the local
+    console sent.
+    """
 
     def __init__(self, connector: Connector, mqtt: MqttClient, topic='hardwario/console') -> None:
+        super().__init__(connector)
         self.mqtt = mqtt
         self.topic = topic
-        self.connector = connector
 
-    def open(self, emit_event: Callable[[EventType, str], None]):
-        self.emit_event = emit_event
+    def open(self):
         self.mqtt.subscribe([self.topic, 'input'])
         self.mqtt.on_message = self._on_message
         self.mqtt.loop_start()
-        self.connector.open(self._emit_event)
+        super().open()
 
-    def close(self):
-        self.connector.close()
-
-    def input(self, line: str):
-        self.mqtt.publish([self.topic, 'input'], line)
+    def handle(self, event: Event):
+        if event.type == EventType.IN:
+            self.mqtt.publish([self.topic, 'input'], event.data)
+        else:
+            super().handle(event)
 
     def _on_message(self, topic, payload):
-        t = topic.split('/')
-        if t[-1] == 'input':
-            self.connector.input(payload)
+        if topic.split('/')[-1] == 'input':
+            self.connector.handle(Event(EventType.IN, payload))
 
-    def _emit_event(self, type: EventType, data):
-        if type == EventType.LOGGER_OUT:
-            self.mqtt.publish([self.topic, 'logger'], data)
-        elif type == EventType.TERMINAL_OUT:
-            self.mqtt.publish([self.topic, 'terminal'], data)
-        self.emit_event(type, data)
+    def _on(self, event: Event):
+        if event.type == EventType.LOG:
+            self.mqtt.publish([self.topic, 'logger'], event.data)
+        elif event.type == EventType.OUT:
+            self.mqtt.publish([self.topic, 'terminal'], event.data)
+        super()._on(event)
 
 
 class MqttClientConnector(Connector):
+    """Consume a console published on MQTT by MqttBridgeMiddleware."""
 
     def __init__(self, mqtt: MqttClient, topic='hardwario/console') -> None:
+        super().__init__()
         self.mqtt = mqtt
         self.topic = topic
 
-    def open(self, emit_event: Callable[[EventType, str], None]):
-        self.emit_event = emit_event
-        self.mqtt.subscribe([self.topic, 'terminal'])
-        self.mqtt.subscribe([self.topic, 'logger'])
-        self.mqtt.subscribe([self.topic, 'input'])
+    def open(self):
+        for suffix in ('terminal', 'logger', 'input'):
+            self.mqtt.subscribe([self.topic, suffix])
         self.mqtt.on_message = self._on_message
         self.mqtt.loop_start()
+        self._emit(Event(EventType.OPEN, ''))
 
     def close(self):
-        pass
+        self._emit(Event(EventType.CLOSE, ''))
 
-    def input(self, line: str):
-        self.mqtt.publish([self.topic, 'input'], line)
+    def handle(self, event: Event):
+        if event.type == EventType.IN:
+            self.mqtt.publish([self.topic, 'input'], event.data)
 
     def _on_message(self, topic, payload):
-        t = topic.split('/')
-        if t[-1] == 'terminal':
-            self.emit_event(EventType.TERMINAL_OUT, payload)
-        elif t[-1] == 'logger':
-            self.emit_event(EventType.LOGGER_OUT, payload)
-        elif t[-1] == 'input':
-            self.emit_event(EventType.TERMINAL_IN, payload)
+        suffix = topic.split('/')[-1]
+        if suffix == 'terminal':
+            self._emit(Event(EventType.OUT, payload))
+        elif suffix == 'logger':
+            self._emit(Event(EventType.LOG, payload))
+        elif suffix == 'input':
+            self._emit(Event(EventType.IN, payload))
+        else:
+            logger.debug(f'Ignoring MQTT topic: {topic}')
