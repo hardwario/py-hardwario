@@ -195,7 +195,7 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
 
             while True:
                 try:
-                    jlink.memory_read32(0x40005400, 1)[0] # RESETREAS_NS
+                    jlink.memory_read32(0x40005400, 1)[0]  # RESETREAS_NS
                 except KeyboardInterrupt:
                     raise
                 except Exception as e:
