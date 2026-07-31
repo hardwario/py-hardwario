@@ -26,7 +26,7 @@ class MqttClient:
         if cafile:
             self.mqttc.tls_set(cafile, certfile, keyfile)
 
-        logger.info('MQTT broker host: %s, port: %d, use tls: %s', host, port, bool(cafile))
+        logger.info('MQTT broker host: {}, port: {}, use tls: {}', host, port, bool(cafile))
 
         try:
             self.mqttc.connect(host, port, keepalive=10)
@@ -68,7 +68,7 @@ class MqttClient:
 
         if rc != paho.mqtt.client.CONNACK_ACCEPTED:
             reason = lut.get(rc, 'unknown code')
-            logger.error('Connection refused from reason: {reason}', )
+            logger.error('Connection refused from reason: {}', reason)
             return
 
         for topic, qos in self._subscriptions:
