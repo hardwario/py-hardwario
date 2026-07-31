@@ -177,13 +177,13 @@ def command_pib_read(ctx, out_json):
 @click.pass_context
 def command_pib_write(ctx, vendor_name, product_name, hw_variant, hw_revision, serial_number, claim_token, ble_passkey, halt):
     '''Write HARDWARIO Product Information Block to UICR.'''
-    logger.debug('command_pib_write: %s', (serial_number,
+    logger.debug('command_pib_write: {}', (serial_number,
                  vendor_name, product_name, hw_revision, hw_variant, claim_token, ble_passkey))
 
     pib = ctx.obj['pib']
     buffer = pib.get_buffer()
 
-    logger.debug('write uicr: %s', buffer.hex())
+    logger.debug('write uicr: {}', buffer.hex())
 
     with ctx.obj['prog'] as prog:
         prog.write_uicr(buffer, halt=halt)
@@ -237,7 +237,7 @@ def command_uicr_write(ctx, format, halt, file):
     if len(buffer) > 128:
         raise click.BadParameter('Buffer has wrong size allowed is max 128B')
 
-    logger.debug('write uicr: %s', buffer.hex())
+    logger.debug('write uicr: {}', buffer.hex())
 
     with ctx.obj['prog'] as prog:
         prog.write_uicr(buffer, halt=halt)
