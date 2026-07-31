@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import time
+import json
 import click
 import pylink
 import queue
@@ -11,7 +12,7 @@ from hardwario.chester.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
 from hardwario.chester.pib import PIB
 from hardwario.chester.utils import find_hex
 from hardwario.chester.connector import PyLinkRTTConnector
-from hardwario.chester.cli.validate import *
+from hardwario.chester.cli.validate import validate_hex_file, validate_pib_param, validate_pib_hw_variant
 from hardwario.device import jlink_setup
 from rttt.connectors import FileLogConnector
 from rttt.console import Console
