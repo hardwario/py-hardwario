@@ -110,7 +110,7 @@ jobs:
 
       - name: Install deps (incl. PyInstaller)
         run: |
-          poetry sync --no-interaction || true
+          poetry sync --no-interaction
           python -m pip install --upgrade pip
           pip install pyinstaller
 
