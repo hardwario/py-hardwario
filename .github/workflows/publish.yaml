@@ -13,8 +13,39 @@ permissions:
   contents: write
 
 jobs:
+  version-check:
+    name: Verify tag matches project version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python - -y
+
+      - name: Update PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Compare tag with project version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="$(poetry version --short)"
+          echo "tag: $TAG, project version: $VERSION"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match the version in pyproject.toml ($VERSION). Expected tag v$VERSION."
+            exit 1
+          fi
+
   pypi-publish:
     name: Upload release to PyPI
+    needs: version-check
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -50,6 +81,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
   build-win:
+    needs: version-check
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -84,7 +116,7 @@ jobs:
 
       - name: Build EXE (onefile)
         run: |
-          pyinstaller --onefile --name hardwario hardwario/__main__.py
+          pyinstaller --onefile --name hardwario --copy-metadata hardwario hardwario/__main__.py
 
       - name: Package ZIP (EXE + jlink worker)
         run: |
