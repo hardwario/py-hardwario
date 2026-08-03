@@ -10,7 +10,7 @@ from hardwario.common.pib import PIB, PIBException
 from hardwario.chester.utils import find_hex
 from hardwario.device.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
 from hardwario.resources import get_resource_path
-from hardwario.device import jlink_setup
+from hardwario.device import jlink_setup, mcp_setup, DEFAULT_MCP_LISTEN
 
 
 def validate_hex_file(ctx, param, value):
@@ -89,8 +89,13 @@ def make_command_console(cli: click.Group, family):
     @click.option('--history-file', type=click.Path(writable=True), show_default=True, default=default_history_file)
     @click.option('--console-file', type=click.Path(writable=True), show_default=True, default=default_console_file)
     @click.option('--device', type=str, help='J-Link device name.', default=None)
+    @click.option('--mcp/--no-mcp', is_flag=True, default=False, show_default=True,
+                  help='Expose this console over an MCP server for AI tools.')
+    @click.option('--mcp-listen', type=str, metavar='HOST:PORT', default=DEFAULT_MCP_LISTEN, show_default=True,
+                  help='MCP server listen address [host:]port.')
+    @click.option('--mcp-token', metavar='TOKEN', default=None, help='Require this bearer token on MCP requests.')
     @click.pass_context
-    def command_console(ctx, reset, latency, history_file, console_file, device):
+    def command_console(ctx, reset, latency, history_file, console_file, device, mcp, mcp_listen, mcp_token):
         '''Start interactive console for shell and logging.'''
 
         with ctx.obj['prog'] as prog:
@@ -109,6 +114,9 @@ def make_command_console(cli: click.Group, family):
 
         if console_file:
             connector = FileLogConnector(connector, console_file)
+
+        if mcp:
+            connector = mcp_setup(connector, mcp_listen, f'HARDWARIO {family} console', token=mcp_token)
 
         logger.remove(2)  # Remove stderr logger
 
