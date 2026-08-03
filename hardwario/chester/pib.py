@@ -1,4 +1,3 @@
-import re
 from hardwario.common import pib
 
 

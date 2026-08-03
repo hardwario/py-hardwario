@@ -49,7 +49,7 @@ class Coredump:
 
         try:
             self.data += binascii.unhexlify(hex_str)
-        except Exception as e:
+        except Exception:
             logger.error("Cannot parse coredump hex_str: {}".format(hex_str))
             self.has_error = True
             self.has_end = True

@@ -55,11 +55,11 @@ def command_flash(ctx, jlink_sn, jlink_speed, file):
             with tempfile.TemporaryDirectory() as temp_dir:
                 zf.extractall(temp_dir)
                 with ctx.obj['prog'] as prog:
-                    click.echo(f'Flash: modem.zip')
+                    click.echo('Flash: modem.zip')
                     prog.program(os.path.join(
                         temp_dir, 'modem.zip'), progress=progress)
                     progress(None)
-                    click.echo(f'Flash: application.hex')
+                    click.echo('Flash: application.hex')
                     prog.program(os.path.join(
                         temp_dir, 'application.hex'), progress=progress)
     else:
@@ -125,7 +125,7 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
 
     prog = ctx.obj['prog']
 
-    with prog as p:
+    with prog:
         pass
 
     jlink = jlink_setup('NRF9160_xxAA', serial_no=prog.get_serial_number(), speed=prog.get_speed())
@@ -198,7 +198,7 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
                     jlink.memory_read32(0x40005400, 1)[0]  # RESETREAS_NS
                 except KeyboardInterrupt:
                     raise
-                except Exception as e:
+                except Exception:
                     raise ResetException()
 
                 try:
@@ -212,7 +212,7 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
                     data = jlink.rtt_read(buffer_index, num_bytes)
                 except KeyboardInterrupt:
                     raise
-                except Exception as e:
+                except Exception:
                     e_cnt += 1
                     if e_cnt > 10:
                         raise
@@ -247,7 +247,7 @@ def command_trace(ctx, jlink_sn, jlink_speed, filename, tcpconnect, duration):
 
                 if duration and running >= duration:
                     jlink.rtt_stop()
-                    print(f'\nStopping modem trace.')
+                    print('\nStopping modem trace.')
                     return
         except KeyboardInterrupt:
             if last_text:

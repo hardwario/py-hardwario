@@ -287,7 +287,7 @@ def command_fw_list(ctx, limit):
 @click.pass_context
 def command_fw_delete(ctx, id):
     '''Delete firmware.'''
-    fw = ctx.obj['fwapi'].delete(id)
+    ctx.obj['fwapi'].delete(id)
     click.echo('OK')
 
 

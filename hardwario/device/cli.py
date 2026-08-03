@@ -1,9 +1,7 @@
 import os
-import pylink
 import click
 import string
 import json
-import time
 from loguru import logger
 from rttt.connectors import PyLinkRTTConnector, FileLogConnector
 from rttt.console import Console
@@ -82,8 +80,8 @@ def make_command_reset(cli: click.Group):
 
 def make_command_console(cli: click.Group, family):
 
-    default_history_file = os.path.expanduser(f"~/.hio_history")
-    default_console_file = os.path.expanduser(f"~/.hio_console")
+    default_history_file = os.path.expanduser("~/.hio_history")
+    default_console_file = os.path.expanduser("~/.hio_console")
 
     @cli.command('console')
     @click.option('--reset', is_flag=True, help='Reset application firmware.')

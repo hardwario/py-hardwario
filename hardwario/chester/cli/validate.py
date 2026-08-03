@@ -32,7 +32,7 @@ def validate_pib_param(ctx, param, value):
 
 
 def validate_pib_hw_variant(ctx, param, value):
-    filepath = download_url(f'https://production.hardwario.com/api/v1/product/family/chester', filename=f'chester_product_list.json', cache_path=DEFAULT_CACHE_PATH)
+    filepath = download_url('https://production.hardwario.com/api/v1/product/family/chester', filename='chester_product_list.json', cache_path=DEFAULT_CACHE_PATH)
     products = json.load(open(filepath))
 
     product_name = ctx.obj['pib'].get_product_name()
