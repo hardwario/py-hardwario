@@ -1,8 +1,7 @@
-import time
 from loguru import logger
 import logging
 from pynrfjprog import APIError, LowLevel
-from pynrfjprog.Parameters import EraseAction, MemoryType, ReadbackProtection
+from pynrfjprog.Parameters import EraseAction, MemoryType
 
 DEFAULT_JLINK_SPEED_KHZ = LowLevel.API._DEFAULT_JLINK_SPEED_KHZ
 

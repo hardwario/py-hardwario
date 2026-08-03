@@ -5,8 +5,6 @@ from pynrfjprog.Parameters import RTTChannelDirection
 from hardwario.device.nrfjprog import (
     NRFJProg as NRFJProgBase,
     NRFJProgException,
-    NRFJProgOpenException,
-    NRFJProgDeviceFamilyException,
     NRFJProgRTTNoChannels,
     DEFAULT_JLINK_SPEED_KHZ
 )

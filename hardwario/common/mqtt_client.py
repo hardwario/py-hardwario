@@ -1,6 +1,5 @@
 from typing import Callable, Any
 import paho.mqtt.client
-from paho.mqtt.client import topic_matches_sub
 import json
 from loguru import logger
 
