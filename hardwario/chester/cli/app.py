@@ -13,7 +13,7 @@ from hardwario.chester.pib import PIB
 from hardwario.chester.utils import find_hex
 from hardwario.chester.connector import PyLinkRTTConnector
 from hardwario.chester.cli.validate import validate_hex_file, validate_pib_param, validate_pib_hw_variant
-from hardwario.device import jlink_setup
+from hardwario.device import jlink_setup, mcp_setup, DEFAULT_MCP_LISTEN
 from rttt.connectors import FileLogConnector
 from rttt.console import Console
 from rttt.event import Event, EventType
@@ -99,8 +99,13 @@ def command_reset(ctx, halt, jlink_sn, jlink_speed):
 @click.option('--coredump-file', type=click.File('wb', 'utf-8', lazy=True), show_default=True, default=default_coredump_file)
 @click.option('--jlink-sn', '-n', type=int, metavar='SERIAL_NUMBER', help='J-Link serial number')
 @click.option('--jlink-speed', type=int, metavar="SPEED", help='J-Link clock speed in kHz', default=2000, show_default=True)
+@click.option('--mcp/--no-mcp', is_flag=True, default=False, show_default=True,
+              help='Expose this console over an MCP server for AI tools.')
+@click.option('--mcp-listen', type=str, metavar='HOST:PORT', default=DEFAULT_MCP_LISTEN, show_default=True,
+              help='MCP server listen address [host:]port.')
+@click.option('--mcp-token', metavar='TOKEN', default=None, help='Require this bearer token on MCP requests.')
 @click.pass_context
-def command_console(ctx, reset, latency, history_file, console_file, coredump_file, jlink_sn, jlink_speed):
+def command_console(ctx, reset, latency, history_file, console_file, coredump_file, jlink_sn, jlink_speed, mcp, mcp_listen, mcp_token):
     '''Start interactive console for shell and logging.'''
 
     # if coredump_file:
@@ -124,6 +129,9 @@ def command_console(ctx, reset, latency, history_file, console_file, coredump_fi
     if console_file:
         text = f'Console: J-Link sn: {prog.get_serial_number()}' if prog.get_serial_number() else 'Console'
         connector = FileLogConnector(connector, console_file, text=text)
+
+    if mcp:
+        connector = mcp_setup(connector, mcp_listen, 'HARDWARIO CHESTER app console', token=mcp_token)
 
     console = Console(connector, history_file=history_file)
     console.run()

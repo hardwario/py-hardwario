@@ -1,6 +1,32 @@
 from loguru import logger
 import pylink
 import click
+from rttt.connectors import MCPMiddleware, MCPPortInUseError
+from rttt.utils import parse_listen
+
+DEFAULT_MCP_LISTEN = '127.0.0.1:8090'
+
+LOOPBACK_HOSTS = ('127.0.0.1', 'localhost', '::1')
+
+
+def mcp_setup(connector, listen, name, token=None):
+    '''Wrap connector in the rttt MCP server middleware and report its URL.'''
+    try:
+        connector = MCPMiddleware(connector, listen=listen, name=name, token=token)
+    except MCPPortInUseError as e:
+        raise click.ClickException(
+            f'{e}. Close the other console, pick a different address with '
+            '--mcp-listen HOST:PORT, or disable the server with --no-mcp.')
+
+    host, port = parse_listen(listen)
+    click.echo(f'MCP server: http://{host}:{port}/mcp')
+
+    if not token and host not in LOOPBACK_HOSTS:
+        click.echo(
+            f'Warning: {host} is not a loopback address and no --mcp-token is set, so anyone '
+            'who can reach this port can flash the device and read or write its memory.', err=True)
+
+    return connector
 
 
 def jlink_setup(device, serial_no=None, speed=2000):
