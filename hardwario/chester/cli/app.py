@@ -110,8 +110,9 @@ def command_reset(ctx, halt, jlink_sn, jlink_speed):
 @click.option('--mcp-listen', type=str, metavar='HOST:PORT', default=DEFAULT_MCP_LISTEN, show_default=True,
               help='MCP server listen address [host:]port.')
 @click.option('--mcp-token', metavar='TOKEN', default=None, help='Require this bearer token on MCP requests.')
+@click.option('--auto-reconnect', is_flag=True, help='Keep re-attaching RTT after the link drops, instead of leaving the console dead until restarted.')
 @click.pass_context
-def command_console(ctx, reset, latency, history_file, console_file, coredump_file, jlink_sn, jlink_speed, mcp, mcp_listen, mcp_token):
+def command_console(ctx, reset, latency, history_file, console_file, coredump_file, jlink_sn, jlink_speed, mcp, mcp_listen, mcp_token, auto_reconnect):
     '''Start interactive console for shell and logging.'''
 
     # if coredump_file:
@@ -134,7 +135,7 @@ def command_console(ctx, reset, latency, history_file, console_file, coredump_fi
     # the reconnect and jlink_open paths need.
     connector = PyLinkRTTConnector(jlink, APP_TERMINAL_BUFFER, APP_LOGGER_BUFFER, latency=latency,
                                    device=APP_DEVICE, serial=prog.get_serial_number(),
-                                   speed=prog.get_speed())
+                                   speed=prog.get_speed(), auto_reconnect=auto_reconnect)
     connector = ChesterLogMiddleware(connector)
 
     if console_file:

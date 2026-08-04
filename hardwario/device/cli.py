@@ -94,8 +94,9 @@ def make_command_console(cli: click.Group, family):
     @click.option('--mcp-listen', type=str, metavar='HOST:PORT', default=DEFAULT_MCP_LISTEN, show_default=True,
                   help='MCP server listen address [host:]port.')
     @click.option('--mcp-token', metavar='TOKEN', default=None, help='Require this bearer token on MCP requests.')
+    @click.option('--auto-reconnect', is_flag=True, help='Keep re-attaching RTT after the link drops, instead of leaving the console dead until restarted.')
     @click.pass_context
-    def command_console(ctx, reset, latency, history_file, console_file, device, mcp, mcp_listen, mcp_token):
+    def command_console(ctx, reset, latency, history_file, console_file, device, mcp, mcp_listen, mcp_token, auto_reconnect):
         '''Start interactive console for shell and logging.'''
 
         with ctx.obj['prog'] as prog:
@@ -110,7 +111,11 @@ def make_command_console(cli: click.Group, family):
 
         jlink = jlink_setup(device, serial_no=prog.get_serial_number(), speed=prog.get_speed())
 
-        connector = PyLinkRTTConnector(jlink, latency=latency)
+        # device/serial/speed are what let rttt reopen the probe by itself, which
+        # the reconnect and jlink_open paths need.
+        connector = PyLinkRTTConnector(jlink, latency=latency, device=device,
+                                       serial=prog.get_serial_number(), speed=prog.get_speed(),
+                                       auto_reconnect=auto_reconnect)
 
         if console_file:
             connector = FileLogConnector(connector, console_file)
