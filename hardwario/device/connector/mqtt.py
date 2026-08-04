@@ -1,7 +1,9 @@
 from loguru import logger
 from rttt.connectors import Connector, Middleware
-from rttt.event import Event, EventType
+from rttt.event import Event, EventType, conn_event
 from hardwario.common.mqtt_client import MqttClient
+
+CONN_SOURCE = 'mqtt'
 
 
 class MqttBridgeMiddleware(Middleware):
@@ -21,8 +23,15 @@ class MqttBridgeMiddleware(Middleware):
     def open(self):
         self.mqtt.subscribe([self.topic, 'input'])
         self.mqtt.on_message = self._on_message
+        self.mqtt.on_connection = self._on_connection
         self.mqtt.loop_start()
         super().open()
+
+    def _on_connection(self, connected, reason=''):
+        # Reported under its own source: this middleware can sit on top of an
+        # RTT connector, and a broker outage must not read as the device
+        # having gone away.
+        self._emit(conn_event(CONN_SOURCE, 'connected' if connected else 'disconnected', reason))
 
     def handle(self, event: Event):
         if event.type == EventType.IN:
@@ -54,8 +63,12 @@ class MqttClientConnector(Connector):
         for suffix in ('terminal', 'logger', 'input'):
             self.mqtt.subscribe([self.topic, suffix])
         self.mqtt.on_message = self._on_message
+        self.mqtt.on_connection = self._on_connection
         self.mqtt.loop_start()
         self._emit(Event(EventType.OPEN, ''))
+
+    def _on_connection(self, connected, reason=''):
+        self._emit(conn_event(CONN_SOURCE, 'connected' if connected else 'disconnected', reason))
 
     def close(self):
         self._emit(Event(EventType.CLOSE, ''))

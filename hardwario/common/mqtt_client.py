@@ -9,6 +9,7 @@ class MqttClient:
         port = int(port)
 
         self.mqttc = paho.mqtt.client.Client(
+            paho.mqtt.client.CallbackAPIVersion.VERSION2,
             client_id=client_id,
             clean_session=clean_session
         )
@@ -17,6 +18,7 @@ class MqttClient:
         self.mqttc.on_disconnect = self._mqtt_on_disconnect
 
         self._on_message = None
+        self._on_connection = None
         self._subscriptions = []  # format: (topic, qos)
 
         if username:
@@ -56,26 +58,42 @@ class MqttClient:
     def on_message(self, on_message: Callable[[str, Any], None]):
         self._on_message = on_message
 
-    def _mqtt_on_connect(self, client, userdata, flags, rc):
-        logger.info(f'Connected to MQTT broker with code {rc}')
+    @property
+    def on_connection(self):
+        return self._on_connection
 
-        lut = {paho.mqtt.client.CONNACK_REFUSED_PROTOCOL_VERSION: 'incorrect protocol version',
-               paho.mqtt.client.CONNACK_REFUSED_IDENTIFIER_REJECTED: 'invalid client identifier',
-               paho.mqtt.client.CONNACK_REFUSED_SERVER_UNAVAILABLE: 'server unavailable',
-               paho.mqtt.client.CONNACK_REFUSED_BAD_USERNAME_PASSWORD: 'bad username or password',
-               paho.mqtt.client.CONNACK_REFUSED_NOT_AUTHORIZED: 'not authorised'}
+    @on_connection.setter
+    def on_connection(self, on_connection: Callable[[bool, str], None]):
+        """Called as (connected, reason) whenever the broker link changes."""
+        self._on_connection = on_connection
 
-        if rc != paho.mqtt.client.CONNACK_ACCEPTED:
-            reason = lut.get(rc, 'unknown code')
-            logger.error('Connection refused from reason: {}', reason)
+    def _report_connection(self, connected, reason=''):
+        if self._on_connection:
+            try:
+                self._on_connection(connected, reason)
+            except Exception as e:
+                logger.error(f'on_connection handler failed: {e}')
+
+    def _mqtt_on_connect(self, client, userdata, connect_flags, reason_code, properties):
+        # paho's v2 reason code carries its own description, so there is no
+        # table of CONNACK constants to keep in step here.
+        if reason_code.is_failure:
+            reason = reason_code.getName()
+            logger.error('MQTT connection refused: {}', reason)
+            self._report_connection(False, reason)
             return
+
+        logger.info('Connected to MQTT broker')
+        self._report_connection(True)
 
         for topic, qos in self._subscriptions:
             self.mqttc.subscribe(topic, qos=qos)
             logger.info(f"Subscribed to topic: {topic} with QoS {qos}")
 
-    def _mqtt_on_disconnect(self, client, userdata, rc):
-        logger.info(f'Disconnected from MQTT broker with code {rc}')
+    def _mqtt_on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
+        reason = reason_code.getName() if reason_code is not None else ''
+        logger.info(f'Disconnected from MQTT broker: {reason}')
+        self._report_connection(False, reason)
 
     def _mqtt_on_message(self, client, userdata, message):
         logger.debug(f'topic: {message.topic} payload: {message.payload}')
