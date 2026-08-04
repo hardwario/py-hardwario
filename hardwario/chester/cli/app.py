@@ -11,12 +11,18 @@ from hardwario.chester.firmwareapi import FirmwareApi, DEFAULT_API_URL
 from hardwario.chester.nrfjprog import NRFJProg, DEFAULT_JLINK_SPEED_KHZ
 from hardwario.chester.pib import PIB
 from hardwario.chester.utils import find_hex
-from hardwario.chester.connector import PyLinkRTTConnector
+from hardwario.chester.connector import ChesterLogMiddleware
 from hardwario.chester.cli.validate import validate_hex_file, validate_pib_param, validate_pib_hw_variant
 from hardwario.device import jlink_setup, mcp_setup, DEFAULT_MCP_LISTEN
-from rttt.connectors import FileLogConnector
+from rttt.connectors import FileLogConnector, PyLinkRTTConnector
 from rttt.console import Console
 from rttt.event import Event, EventType
+
+APP_DEVICE = 'NRF52840_xxAA'
+
+# CHESTER firmware names its RTT buffers rather than relying on fixed indices.
+APP_TERMINAL_BUFFER = 'Terminal'
+APP_LOGGER_BUFFER = 'Logger'
 
 default_history_file = os.path.expanduser("~/.chester_history")
 default_console_file = os.path.expanduser("~/.chester_console")
@@ -122,9 +128,14 @@ def command_console(ctx, reset, latency, history_file, console_file, coredump_fi
 
     prog = ctx.obj['prog']
 
-    jlink = jlink_setup('NRF52840_xxAA', serial_no=prog.get_serial_number(), speed=prog.get_speed())
+    jlink = jlink_setup(APP_DEVICE, serial_no=prog.get_serial_number(), speed=prog.get_speed())
 
-    connector = PyLinkRTTConnector(jlink, latency=latency)
+    # device/serial/speed are what let rttt reopen the probe by itself, which
+    # the reconnect and jlink_open paths need.
+    connector = PyLinkRTTConnector(jlink, APP_TERMINAL_BUFFER, APP_LOGGER_BUFFER, latency=latency,
+                                   device=APP_DEVICE, serial=prog.get_serial_number(),
+                                   speed=prog.get_speed())
+    connector = ChesterLogMiddleware(connector)
 
     if console_file:
         text = f'Console: J-Link sn: {prog.get_serial_number()}' if prog.get_serial_number() else 'Console'
@@ -335,13 +346,16 @@ def command_pokus(ctx, reset, timeout, console_file, command):
     jlink.open(serial_no=prog.get_serial_number())
     jlink.set_speed(prog.get_speed())
     jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
-    jlink.connect('NRF52840_xxAA')
+    jlink.connect(APP_DEVICE)
 
     if reset:
         jlink.reset(halt=False)
         time.sleep(1)
 
-    connector = PyLinkRTTConnector(jlink, latency=50)
+    connector = PyLinkRTTConnector(jlink, APP_TERMINAL_BUFFER, APP_LOGGER_BUFFER, latency=50,
+                                   device=APP_DEVICE, serial=prog.get_serial_number(),
+                                   speed=prog.get_speed())
+    connector = ChesterLogMiddleware(connector)
 
     if console_file:
         connector = FileLogConnector(connector, console_file, text="Command")
