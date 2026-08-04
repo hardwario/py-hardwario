@@ -1362,14 +1362,14 @@ files = [
 
 [[package]]
 name = "rttt"
-version = "1.7.0"
+version = "1.9.1"
 description = "HARDWARIO Real Time Transfer Terminal Console"
 optional = false
 python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "rttt-1.7.0-py3-none-any.whl", hash = "sha256:a87491b0cb3f56ec5b45e5d0e068dc6167e7fad8ce4d03ac2ae515dfb974beda"},
-    {file = "rttt-1.7.0.tar.gz", hash = "sha256:19b67d0076392504c7a42077b2429e070c5fb5d69778c20c90bb51c7e3f4686d"},
+    {file = "rttt-1.9.1-py3-none-any.whl", hash = "sha256:0524e20323f1860a5de0688e8b1355c717b1d8f110cf19658b7e9dbf1283028d"},
+    {file = "rttt-1.9.1.tar.gz", hash = "sha256:49f43ab3642e3735caf3e7bd765be86c0291eb96e6d8d29ed42fa2b934c0a07c"},
 ]
 
 [package.dependencies]
@@ -1544,4 +1544,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4"
-content-hash = "eb1403e3e911eef2b33fad2a28d1ab0160f6612da37ea95b51e22b1c1b3d3a33"
+content-hash = "efa57b03795a658d7e9f57ae57a6a30b9b52f3e9984bae1c0dc7408bbc3bc2ff"
