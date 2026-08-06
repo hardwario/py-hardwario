@@ -1,6 +1,6 @@
 [project]
 name = "hardwario"
-version = "1.7.0"
+version = "1.7.1"
 description = "HARDWARIO Command Line Tool"
 authors = [
     { name = "Karel Blavka", email = "karel.blavka@hardwario.com" },
