@@ -74,3 +74,37 @@ jobs:
 
       - name: Package project
         run: poetry build
+
+  coinstall:
+    # hardwario imports pylink but does not depend on it directly: the version
+    # comes from rttt. That makes rttt's pylink constraint ours too, and it has
+    # to stay installable alongside the Zephyr toolchain, which pins
+    # pylink-square <2.0 via pyocd. rttt 1.9.1 required ^2.0.1 and made the two
+    # unresolvable: `west packages pip --install` gave up, and pip on its own
+    # backtracked through ancient releases looking for a way out.
+    #
+    # This job is the only place that catches a pylink constraint change in
+    # rttt, so keep it even though hardwario's own pyproject never names pylink.
+    #
+    # Resolved from an empty environment on purpose. Installing into an image
+    # that already has the packages hides the conflict, because pip leaves what
+    # is there alone.
+    needs: codestyle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Resolve against the Zephyr pylink pin
+        run: pip install --dry-run . "pyocd==0.42.0"
+
+      - name: Install alongside it for real, and check the result holds
+        run: |
+          pip install . "pyocd==0.42.0"
+          pip check
+          hardwario --version
