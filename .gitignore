@@ -9,3 +9,5 @@ dist/
 develop-eggs/
 .pytest_cache
 zzz/
+.claude/
+CLAUDE.md
