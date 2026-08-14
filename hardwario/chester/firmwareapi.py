@@ -118,7 +118,12 @@ class FirmwareApi:
 
         return self._response.json()
 
-    def upload(self, name, version, app_path='.'):
+    def upload(self, name, version, app_path='.', zephyr_elf=False):
+        '''Upload a firmware build.
+
+        zephyr_elf is opt-in: the ELF carries debug symbols and source paths,
+        so it is only sent when the caller asks for it.
+        '''
         # Before opening any file or streaming anything.
         self.check_token()
 
@@ -158,11 +163,12 @@ class FirmwareApi:
         if manifest_json_path:
             files['manifest'] = open(manifest_json_path, 'rb')
 
-        zephyr_elf_path = find_zephyr_elf(app_path, True)
-        logger.debug(f'zephyr_elf_path={zephyr_elf_path}')
-        if zephyr_elf_path:
-            data['zephyr_elf_sha256'] = get_file_hash(zephyr_elf_path)
-            files['zephyr_elf'] = open(zephyr_elf_path, 'rb')
+        if zephyr_elf:
+            zephyr_elf_path = find_zephyr_elf(app_path, True)
+            logger.debug(f'zephyr_elf_path={zephyr_elf_path}')
+            if zephyr_elf_path:
+                data['zephyr_elf_sha256'] = get_file_hash(zephyr_elf_path)
+                files['zephyr_elf'] = open(zephyr_elf_path, 'rb')
 
         try:
             resp = self._post_upload('/v1/firmware', data, files)

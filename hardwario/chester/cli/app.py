@@ -281,10 +281,11 @@ def validate_version(ctx, param, value):
 @cli_fw.command('upload')
 @click.option('--name', type=str, help='Firmware name (max 100 characters).', prompt=True, required=True)
 @click.option('--version', type=str, help='Firmware version (max 50 characters).', callback=validate_version, prompt=True, required=True)
+@click.option('--zephyr-elf', is_flag=True, help='Also upload zephyr.elf. It carries debug symbols and source paths, so it is not sent by default.')
 @click.pass_context
-def command_fw_upload(ctx, name, version):
+def command_fw_upload(ctx, name, version, zephyr_elf):
     '''Upload application firmware.'''
-    fw = ctx.obj['fwapi'].upload(name, version, '.')
+    fw = ctx.obj['fwapi'].upload(name, version, '.', zephyr_elf=zephyr_elf)
     url = ctx.obj['fwapi'].url
     click.echo(f'Unique identifier: {fw["id"]}')
     click.echo(f'Sharable link    : {url[:-4]}/{fw["id"]}')

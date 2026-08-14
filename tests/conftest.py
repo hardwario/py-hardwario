@@ -1,11 +1,14 @@
 import http.server
 import os
+import re
 import socket
 import ssl
 import subprocess
 import threading
 
 import pytest
+
+MULTIPART_NAME_RE = re.compile(rb'Content-Disposition: form-data; name="([^"]+)"')
 
 
 class RequestRecord:
@@ -16,10 +19,22 @@ class RequestRecord:
         self.path = path
         self.headers = headers
         self.body_bytes_read = 0
+        self.multipart_names = set()
 
     @property
     def authorization(self):
         return self.headers.get('Authorization')
+
+    def scan_multipart_names(self, chunk):
+        '''Collect multipart field names out of a body chunk.
+
+        Only the names matter here, so this reads the Content-Disposition lines
+        as they stream past instead of buffering megabytes to parse properly.
+        A name split across a chunk boundary would be missed, but the parts
+        under test sit in the first few kilobytes.
+        '''
+        for match in MULTIPART_NAME_RE.finditer(chunk):
+            self.multipart_names.add(match.group(1).decode('latin-1'))
 
 
 class RecordingServer:
@@ -62,12 +77,17 @@ class RecordingServer:
                 # much actually got consumed.
                 length = int(self.headers.get('Content-Length') or 0)
                 remaining = length
+                tail = b''
                 while remaining > 0:
                     chunk = self.rfile.read(min(remaining, 65536))
                     if not chunk:
                         break
                     remaining -= len(chunk)
                     record.body_bytes_read += len(chunk)
+                    # Overlap chunks so a header split across the boundary is
+                    # still seen.
+                    record.scan_multipart_names(tail + chunk)
+                    tail = chunk[-256:]
 
                 self.send_response(status)
                 self.send_header('Content-Type', 'application/json')
@@ -273,9 +293,11 @@ def app_dir(tmp_path):
     '''A build tree the upload command accepts, with a multi-MB hex payload.
 
     Generated in memory rather than committed: the point is only to exceed
-    socket buffers so the write side fails.
+    socket buffers so the write side fails. A zephyr.elf is present so tests
+    can tell whether the upload picks it up.
     '''
     zephyr = tmp_path / 'build' / 'zephyr'
     zephyr.mkdir(parents=True)
     (zephyr / 'merged.hex').write_bytes(os.urandom(4 * 1024 * 1024))
+    (zephyr / 'zephyr.elf').write_bytes(os.urandom(1024 * 1024))
     return tmp_path

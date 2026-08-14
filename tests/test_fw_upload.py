@@ -136,6 +136,41 @@ def test_upload_is_not_retried(tls_server, app_dir, tls_cert):
     assert len(server.requests_for('POST')) == 1
 
 
+def test_zephyr_elf_is_not_sent_by_default(http_server, app_dir):
+    '''The ELF holds debug symbols and source paths, so it is opt-in.
+
+    app_dir puts a zephyr.elf in the build tree, which the upload used to pick
+    up automatically. Assert on the multipart part names the server actually
+    received rather than on payload size, which the hex dominates anyway.
+    '''
+    server = http_server({
+        ('GET', '/chester/api/v1/firmware'): (200, b'[]'),
+        ('POST', '/chester/api/v1/firmware'): (201, b'{"id": "abc123"}'),
+    })
+
+    result = run_cli(upload_args(server.url), app_dir, token=TOKEN)
+
+    assert result.returncode == 0, result.stderr
+    post = server.requests_for('POST')[0]
+    assert 'firmware_hex' in post.multipart_names
+    assert 'zephyr_elf' not in post.multipart_names
+    assert 'zephyr_elf_sha256' not in post.multipart_names
+
+
+def test_zephyr_elf_is_sent_with_the_flag(http_server, app_dir):
+    server = http_server({
+        ('GET', '/chester/api/v1/firmware'): (200, b'[]'),
+        ('POST', '/chester/api/v1/firmware'): (201, b'{"id": "abc123"}'),
+    })
+
+    result = run_cli(upload_args(server.url) + ['--zephyr-elf'], app_dir, token=TOKEN)
+
+    assert result.returncode == 0, result.stderr
+    post = server.requests_for('POST')[0]
+    assert 'zephyr_elf' in post.multipart_names
+    assert 'zephyr_elf_sha256' in post.multipart_names
+
+
 def test_successful_upload_is_unchanged(http_server, app_dir):
     server = http_server({
         ('GET', '/chester/api/v1/firmware'): (200, b'[]'),
