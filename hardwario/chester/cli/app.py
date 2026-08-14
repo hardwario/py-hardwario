@@ -264,7 +264,7 @@ def command_uicr_write(ctx, format, halt, file):
 
 
 @cli.group(name='fw')
-@click.option('--url', metavar='URL', required=True, default=os.environ.get('HARDWARIO_FW_API_URL', DEFAULT_API_URL), show_default=True)
+@click.option('--url', metavar='URL', required=True, default=DEFAULT_API_URL, envvar='HARDWARIO_FW_API_URL', show_default=True)
 @click.option('--token', metavar='TOKEN', help='User API token from https://legacy.hardwario.cloud .', required='--help' not in sys.argv, envvar='HARDWARIO_CLOUD_TOKEN')
 @click.pass_context
 def cli_fw(ctx, url, token):
