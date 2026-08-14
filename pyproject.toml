@@ -49,6 +49,7 @@ packages = [
 [tool.poetry.group.dev.dependencies]
 pycodestyle = "^2.14.0"
 pyflakes = "^3.4.0"
+pytest = "^8.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0"]
