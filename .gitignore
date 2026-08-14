@@ -11,3 +11,4 @@ develop-eggs/
 zzz/
 .claude/
 CLAUDE.md
+.env

@@ -1,6 +1,7 @@
 import os
 import sys
 import click
+from dotenv import load_dotenv
 from loguru import logger
 import hardwario
 from hardwario.chester.cli import cli as chester
@@ -37,6 +38,15 @@ def main():
 
     logger.debug('Argv: {}', sys.argv)
     logger.debug('Module: hardwario.common Version: {}', hardwario.__version__)
+
+    # Only the .env in the current working directory, never one further up the
+    # tree: the CLI is run from firmware directories, and find_dotenv() walking
+    # upwards would silently pick up an unrelated parent's token.
+    dotenv_path = os.path.join(os.getcwd(), '.env')
+    if os.path.isfile(dotenv_path):
+        logger.debug('Loading .env: {}', dotenv_path)
+        # override=False so a real environment variable still wins.
+        load_dotenv(dotenv_path, override=False)
 
     try:
         with logger.catch(reraise=True, exclude=KeyboardInterrupt):
